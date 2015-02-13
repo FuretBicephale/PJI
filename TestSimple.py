@@ -84,5 +84,5 @@ print 'v = ', stateRecord.v
 print ''
 print 'Synapses state'
 print 'w = ', synapsesRecord.w
-print 'dwPre = ', synapsesRecord.dwPre
-print 'dwPost = ', synapsesRecord.dwPost
+# print 'dwPre = ', synapsesRecord.dwPre
+# print 'dwPost = ', synapsesRecord.dwPost
