@@ -1,20 +1,24 @@
 from brian2 import *
 
 # Input neurons
-indices = range(4) * 2 # 4 neurons
-times = [time/2.0 for time in range(1, 9)] * ms # Each neurons generate a spike at i ms (i = neurons index)
+indices = range(4) * 3 # 4 neurons
+times = [time/2.0 for time in range(1, 13)] * ms # Each neurons generate a spike at i ms (i = neurons index)
 input = SpikeGeneratorGroup(4, indices, times)
 
 # Neurones
 nbPx = 4 # Number of pixels on the image
 nbNeuronsPerPx = 1 # Number of neurons per pixel
 N = nbPx * nbNeuronsPerPx # Total number of neurons
-tLeak = 5*ms
-eqs = 'dv/dt = -v/tLeak : volt' # Neurons model
+
+tLeak = 5*ms # Leak time
+tRefrac = 10*ms # Minimum time between two presynaptics spikes
+tInhib = 1.5*ms # Minimum time before an inhibited spike can receive presynaptics spikes agains
+
+eqs = '''dv/dt = -v/tLeak : volt (unless refractory)''' # Neurons model
 threshold = 800*volt # Neurons send a spike when this threshold is reached
 reset = 0*volt # Initial neurons value
 
-firstLayer = NeuronGroup(N, eqs, threshold='v>=threshold', reset='v=reset')
+firstLayer = NeuronGroup(N, eqs, threshold='v>=threshold', reset='v=reset', refractory=tRefrac)
 
 # Synapses
 wInit = 800*volt # Initial synaptic weight values
@@ -26,10 +30,9 @@ aPost = 50*volt # Apha values for postsynaptics spikes
 bPre = 0*volt # Beta values for presynaptics spikes
 bPost = 0*volt # Beta values for postsynaptics spikes
 
-tRefrac = 10*ms # Minimum time between two presynaptics spikes
-tInhib = 1.5*ms # Minimum time before an inhibited spike can receive presynaptics spikes agains
 tTLP = 2*ms # Maximum time between post and pre spikes to launch a LTP
 
+# ltpCondition is true if the synapse deal with a Potentiation, false if it's a Depression
 synapsesModel = '''w : volt
                    dwPre = aPre * exp(-bPre*(w-wMin/wMax-wMin)) : volt
                    dwPost = aPost * exp(-bPost*(wMax-w/wMax-wMin)) : volt
@@ -38,9 +41,12 @@ synapsesModel = '''w : volt
                    ltpCondition = (tPost - tPre) >= (0 * second) and (tPost - tPre) <= tTLP : 1'''
 preEqs = '''tPre = t
             v = v * exp(-(t-lastupdate)/tLeak) + w'''
+# If ltpCondition is False then it's equals to 0, 1 otherwise
+# So dwPre * (ltpCondition) = 0 if ltpCondition is false, dwPre otherwise
+# And dwPost * (ltpCondition != 1) = 0 if ltpCondition is true (== 0), dwPost otherwise
 postEqs = '''tPost = t
-             w = w + dwPre * (ltpCondition)
-             w = w - dwPost * (ltpCondition != 1)'''
+             w = clip(w + dwPre * (ltpCondition), wMin, wMax)
+             w = clip(w - dwPost * (ltpCondition != 1), wMin, wMax)'''
 synapses = Synapses(input, target=firstLayer, model=synapsesModel, pre=preEqs, post=postEqs)
 synapses.connect('i == j') # Connect each neuron of the input layer to the same index neuron of the output layer
 synapses.w = wInit # Initialize synaptic weight
@@ -61,7 +67,7 @@ synapsesRecord = StateMonitor(synapses, True, record = True) # Record the state 
 
 # Run
 print ''
-run(5*ms, report='stdout')
+run(10*ms, report='stdout')
 
 # End
 print ''
