@@ -14,11 +14,13 @@ tLeak = 5*ms # Leak time
 tRefrac = 10*ms # Minimum time between two presynaptics spikes
 tInhib = 1.5*ms # Minimum time before an inhibited spike can receive presynaptics spikes agains
 
-eqs = '''dv/dt = -v/tLeak : volt (unless refractory)''' # Neurons model
+eqs = '''dv/dt = -v/tLeak : volt (unless refractory)
+         refrac : second''' # Neurons model
 threshold = 800*volt # Neurons send a spike when this threshold is reached
 reset = 0*volt # Initial neurons value
 
-firstLayer = NeuronGroup(N, eqs, threshold='v>=threshold', reset='v=reset', refractory=tRefrac)
+firstLayer = NeuronGroup(N, eqs, threshold='v>=threshold', reset='v=reset', refractory='refrac')
+firstLayer.refrac = tRefrac
 
 # Synapses
 wInit = 800*volt # Initial synaptic weight values
@@ -40,7 +42,8 @@ synapsesModel = '''w : volt
                    tPost : second
                    ltpCondition = (tPost - tPre) >= (0 * second) and (tPost - tPre) <= tTLP : 1'''
 preEqs = '''tPre = t
-            v = v * exp(-(t-lastupdate)/tLeak) + w'''
+            v = v * exp(-(t-lastupdate)/tLeak) + w
+            refrac = tRefrac * int(not_refractory) + refrac * (1 - int(not_refractory))'''
 # If ltpCondition is False then it's equals to 0, 1 otherwise
 # So dwPre * (ltpCondition) = 0 if ltpCondition is false, dwPre otherwise
 # And dwPost * (ltpCondition != 1) = 0 if ltpCondition is true (== 0), dwPost otherwise
@@ -52,18 +55,19 @@ synapses.connect('i == j') # Connect each neuron of the input layer to the same 
 synapses.w = wInit # Initialize synaptic weight
 
 # Inhibition
-inhibition = Synapses(firstLayer)
+inhibition = Synapses(firstLayer, pre='refrac = tInhib * int(not_refractory) + refrac * (1 - int(not_refractory))')
+inhibition.connect('i != j')
 # For each pixel of the image, we link every neurons of this pixel with inhibitory synapses
-for n in xrange(0, N, nbNeuronsPerPx):
-    neuronsOfPx = range(n, n + nbNeuronsPerPx)
+# for n in xrange(0, N, nbNeuronsPerPx):
+    # neuronsOfPx = range(n, n + nbNeuronsPerPx)
     # We connect each neurons between the first neuron of the pixel and the last one
-    inhibition.connect('i != j and n <= i and i < nbNeuronsPerPx and n <= j and j < nbNeuronsPerPx')
+    # inhibition.connect('i != j and n <= i and i < nbNeuronsPerPx and n <= j and j < nbNeuronsPerPx')
 
 # Monitor
 record = SpikeMonitor(firstLayer) # Record output layer spikes
 recordInput = SpikeMonitor(input) # Record input layer spikes
-stateRecord = StateMonitor(firstLayer, 'v', record = True) # Record the state of each neurons of the output layer
-synapsesRecord = StateMonitor(synapses, True, record = True) # Record the state of each synapses
+stateRecord = StateMonitor(firstLayer, ('v', 'refrac'), record = True) # Record the state of each neurons of the output layer
+synapsesRecord = StateMonitor(synapses, ('w', 'dwPre', 'dwPost'), record = True) # Record the state of each synapses
 
 # Run
 print ''
@@ -86,9 +90,8 @@ print ''
 print 'First layer state'
 print 'v = ', stateRecord.v
 
-
-print ''
-print 'Synapses state'
-print 'w = ', synapsesRecord.w
+# print ''
+# print 'Synapses state'
+# print 'w = ', synapsesRecord.w
 # print 'dwPre = ', synapsesRecord.dwPre
 # print 'dwPost = ', synapsesRecord.dwPost
