@@ -1,8 +1,8 @@
 from brian2 import *
 
 # Input neurons
-indices = [0, 0, 1, 1, 2, 2, 3, 3] # 4 neurons
-times = [time/2.0 for time in range(1, 9)] * ms # Each neurons generate a spike at i ms (i = neurons index)
+indices = [0, 0, 1, 1, 2, 2, 3, 3] * 10 # 4 neurons
+times = [time for time in range(1, len(indices) * 2, 2)] * ms # Each neurons generate a spike at i ms (i = neurons index)
 input = SpikeGeneratorGroup(4, indices, times)
 
 # Neurones
@@ -11,7 +11,7 @@ nbSynapsesPerPx = 2 # Number of synapses per pixel
 
 tLeak = 5*ms # Leak time
 tRefrac = 10*ms # Minimum time between two presynaptics spikes
-tInhib = 1.5*ms # Minimum time before an inhibited spike can receive presynaptics spikes agains
+tInhib = 2*ms # Minimum time before an inhibited spike can receive presynaptics spikes agains
 
 eqs = '''dv/dt = -v/tLeak : volt (unless refractory)
          refrac : second
@@ -67,7 +67,7 @@ synapsesRecord = StateMonitor(synapses, ('w', 'dwPre', 'dwPost'), record = True)
 
 # Run
 print ''
-timeRun = 5*ms
+timeRun = 200*ms
 run(timeRun, report='stdout')
 
 # End
