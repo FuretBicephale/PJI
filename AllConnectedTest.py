@@ -6,9 +6,8 @@ times = [time/2.0 for time in range(1, 9)] * ms # Each neurons generate a spike 
 input = SpikeGeneratorGroup(4, indices, times)
 
 # Neurones
-nbPx = 4 # Number of pixels on the image
-nbNeuronsPerPx = 2 # Number of neurons per pixel
-N = nbPx * nbNeuronsPerPx # Total number of neurons
+nbPx = 8 # Number of pixels on the image
+nbSynapsesPerPx = 2 # Number of synapses per pixel
 
 tLeak = 5*ms # Leak time
 tRefrac = 10*ms # Minimum time between two presynaptics spikes
@@ -20,7 +19,7 @@ eqs = '''dv/dt = -v/tLeak : volt (unless refractory)
 threshold = 800*volt # Neurons send a spike when this threshold is reached
 reset = 0*volt # Initial neurons value
 
-firstLayer = NeuronGroup(N, eqs, threshold='v>=threshold', reset='v=reset', refractory='refrac')
+firstLayer = NeuronGroup(nbPx, eqs, threshold='v>=threshold', reset='v=reset', refractory='refrac')
 firstLayer.refrac = tRefrac
 
 # Synapses
@@ -52,11 +51,11 @@ postEqs = '''tPost = t
              w = clip(w + dwPre * (ltpCondition), wMin, wMax)
              w = clip(w - dwPost * (ltpCondition != 1), wMin, wMax)'''
 synapses = Synapses(input, target=firstLayer, model=synapsesModel, pre=preEqs, post=postEqs)
-synapses.connect('j >= i * nbNeuronsPerPx and j < (i+1) * nbNeuronsPerPx') # Connect each neuron of the input layer to the same index neuron of the output layer
-synapses.w = wInit # Initialize synaptic weight
+synapses.connect(True, n=nbSynapsesPerPx) # Connecting every neurons of the first layer to every neurons of the second one
+synapses.w = '(rand() * wMax) + wMin' # Initialize synaptic weight randomly between wMin and wMax
 
 # Inhibition
-inhibition = Synapses(firstLayer, pre='lastInhib = t * int(not_refractory)')
+inhibition = Synapses(firstLayer, model='w : volt', pre='lastInhib = t * int(not_refractory)')
 inhibition.connect("i != j") # Every neurons of the layer are connected to each other
 inhibition.w = wInit
 
@@ -68,7 +67,8 @@ synapsesRecord = StateMonitor(synapses, ('w', 'dwPre', 'dwPost'), record = True)
 
 # Run
 print ''
-run(5*ms, report='stdout')
+timeRun = 5*ms
+run(timeRun, report='stdout')
 
 # End
 print ''
@@ -87,8 +87,14 @@ print ''
 print 'First layer state'
 print 'v = ', stateRecord.v
 
-# print ''
-# print 'Synapses state'
-# print 'w = ', synapsesRecord.w
+print ''
+print 'Synapses state'
+print 'w = ', synapsesRecord.w
 # print 'dwPre = ', synapsesRecord.dwPre
 # print 'dwPost = ', synapsesRecord.dwPost
+
+plot(stateRecord.t/ms, [threshold for i in range(len(stateRecord.t))], '--', label='threshold')
+for i in range(nbPx) :
+    plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
+legend()
+show()
