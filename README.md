@@ -16,3 +16,6 @@ The output displays each layer spikes, second layer values and synapses weight.
 This script is very similar to TestSimple : it creates a neuronal system with two layer connected to each other and one of them sending spikes to the other. The main difference is that each neuron of the first layer is connected to each neuron of the second one with random synapse weight.
 
 The output displays the same values as TestSimple. It also displays plots with second layer's neurons voltage.
+
+### 2pxMovementRecognition
+Creates a neuronal system able to recognize a vertical movement between 2 pixels (in progress)

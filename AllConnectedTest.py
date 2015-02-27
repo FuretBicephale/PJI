@@ -32,15 +32,15 @@ aPost = 50*volt # Apha values for postsynaptics spikes
 bPre = 0*volt # Beta values for presynaptics spikes
 bPost = 0*volt # Beta values for postsynaptics spikes
 
-tTLP = 2*ms # Maximum time between post and pre spikes to launch a LTP
+tLTP = 2*ms # Maximum time between post and pre spikes to launch a LTP
 
-# ltpCondition is true if the synapse deal with a Potentiation, false if it's a Depression
+# ltpCondition is true if the synapse deals with a Potentiation, false if it's a Depression
 synapsesModel = '''w : volt
                    dwPre = aPre * exp(-bPre*(w-wMin/wMax-wMin)) : volt
                    dwPost = aPost * exp(-bPost*(wMax-w/wMax-wMin)) : volt
                    tPre : second
                    tPost : second
-                   ltpCondition = (tPost - tPre) >= (0 * second) and (tPost - tPre) <= tTLP : 1'''
+                   ltpCondition = (tPost - tPre) >= (0 * second) and (tPost - tPre) <= tLTP : 1'''
 preEqs = '''tPre = t
             v = v * (t - lastInhib < tInhib and lastInhib != 0 * ms) + (v * exp(-(t-lastupdate)/tLeak) + w) * (t - lastInhib >= tInhib or lastInhib == 0 * ms)
             refrac = tRefrac * int(not_refractory) + refrac * (1 - int(not_refractory))'''
@@ -49,7 +49,7 @@ preEqs = '''tPre = t
 # And dwPost * (ltpCondition != 1) = 0 if ltpCondition is true (== 0), dwPost otherwise
 postEqs = '''tPost = t
              w = clip(w + dwPre * (ltpCondition), wMin, wMax)
-             w = clip(w - dwPost * (ltpCondition != 1), wMin, wMax)'''
+             w = clip(w - dwPost * (ltpCondition == 0), wMin, wMax)'''
 synapses = Synapses(input, target=firstLayer, model=synapsesModel, pre=preEqs, post=postEqs)
 synapses.connect(True, n=nbSynapsesPerPx) # Connecting every neurons of the first layer to every neurons of the second one
 synapses.w = '(rand() * wMax) + wMin' # Initialize synaptic weight randomly between wMin and wMax
