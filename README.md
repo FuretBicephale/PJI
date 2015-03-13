@@ -18,4 +18,6 @@ This script is very similar to TestSimple : it creates a neuronal system with tw
 The output displays the same values as TestSimple. It also displays plots with second layer's neurons voltage.
 
 ### 2pxMovementRecognition
-Creates a neuronal system able to recognize a vertical movement between 2 pixels (in progress)
+Creates a neuronal system able to recognize a vertical movement between 2 pixels.
+
+Currently, the synapses weight are randomly defined between two defined values. Because of this randomness, the recognition doesn't always works.

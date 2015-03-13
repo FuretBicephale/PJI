@@ -4,16 +4,18 @@ from brian2 import *
 nbPixels = 2;
 nbPixelStates = 2;
 
+# Movements
+down = [0, 1, 2, 3]
+up = [2, 3, 0, 1]
+time = [1, 2, 2, 3] # One movement last 2 seconds
+
 # Learning
-indices = [0, 1, 2, 3, 2 ,3, 0, 1] * 100
-times = [1, 2, 2, 3, 4, 5, 5, 6]
-times += [i + j for j in range(8, 800, 8) for i in times]
+indices = (down + up) * 50
+times = time + [i + j for j in range(5, 500, 5) for i in time] # 3 seconds between 2 movements
 
 # After learning
-indices += [2 ,3, 0, 1, 0, 1, 2, 3, 0, 1, 2, 3, 2 ,3, 0, 1] * 10
-newTimes = [801, 802, 802, 803, 804, 805, 805, 806, 807, 808, 808, 809, 810, 811, 811, 812]
-times += newTimes
-times += [i + j for j in range(16, 160, 16) for i in newTimes]
+indices += (up + down + down + up) * 25
+times += [i + j for j in range(510, 1010, 5) for i in time]
 
 times *= ms
 input = SpikeGeneratorGroup(nbPixels * nbPixelStates, indices, times)
@@ -22,8 +24,8 @@ input = SpikeGeneratorGroup(nbPixels * nbPixelStates, indices, times)
 nbOutput = 2;
 
 tLeak = 5*ms # Leak time
-tRefrac = 10*ms # Minimum time between two presynaptics spikes
-tInhib = 2*ms # Minimum time before an inhibited spike can receive presynaptics spikes agains
+tRefrac = 4*ms # Minimum time between two presynaptics spikes
+tInhib = 3*ms # Minimum time before an inhibited spike can receive presynaptics spikes agains
 
 # Neurons model
 eqs = '''dv/dt = -v/tLeak : volt (unless refractory)
@@ -55,7 +57,8 @@ synapsesModel = '''w : volt
                    dwPost = aPost * exp(-bPost*(wMax-w/wMax-wMin)) : volt
                    tPre : second
                    tPost : second
-                   ltpCondition = (tPost - tPre) >= (0 * second) and (tPost - tPre) <= tLTP : 1'''
+                   ltpCondition = (tPost - tPre) >= (0 * second) and (tPost - tPre) <= tLTP : 1
+                   apprentissage : 1'''
 preEqs = '''tPre = t
             v = v * (t - lastInhib < tInhib and lastInhib != 0 * ms) + (v * exp(-(t-lastupdate)/tLeak) + w) * (t - lastInhib >= tInhib or lastInhib == 0 * ms)
             refrac = tRefrac * int(not_refractory) + refrac * (1 - int(not_refractory))'''
@@ -63,13 +66,14 @@ preEqs = '''tPre = t
 # So dwPre * (ltpCondition) = 0 if ltpCondition is false, dwPre otherwise
 # And dwPost * (ltpCondition != 1) = 0 if ltpCondition is true (== 0), dwPost otherwise
 postEqs = '''tPost = t
-             w = clip(w + dwPre * (ltpCondition), wMin, wMax)
-             w = clip(w - dwPost * (ltpCondition == 0), wMin, wMax)'''
+             w = clip(w + dwPre * ltpCondition * apprentissage, wMin, wMax)
+             w = clip(w - dwPost * (ltpCondition == 0) * apprentissage, wMin, wMax)'''
 synapses = Synapses(input, target=output, model=synapsesModel, pre=preEqs, post=postEqs)
 synapses.connect(True) # Connecting every neurons of the first layer to every neurons of the second one
 
 # Initialize synaptic weight randomly between wMin and wMax
 synapses.w = '(rand() * wInitDeviation) + (wInitAverage - wInitDeviation/2)'
+synapses.apprentissage = 1
 
 # Inhibition
 inhibition = Synapses(output, model='w : volt', pre='lastInhib = t * int(not_refractory)')
@@ -84,7 +88,7 @@ synapsesRecord = StateMonitor(synapses, ('w', 'dwPre', 'dwPost'), record = True)
 
 # Run
 print ''
-timeRun = 800*ms
+timeRun = 500*ms
 run(timeRun, report='stdout')
 
 # End
@@ -110,17 +114,18 @@ run(timeRun, report='stdout')
 # print 'dwPre = ', synapsesRecord.dwPre
 # print 'dwPost = ', synapsesRecord.dwPost
 
-plot(stateRecord.t/ms, [threshold for i in range(len(stateRecord.t))], '--', label='threshold')
-for i in range(nbOutput) :
-    plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
-legend()
-show()
+# plot(stateRecord.t/ms, [threshold for i in range(len(stateRecord.t))], '--', label='threshold')
+# for i in range(nbOutput) :
+#     plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
+# legend()
+# show()
 
 # Second simulation
 inhibition.connect(False) # Disconnect inhibition
+synapses.apprentissage = 0
 
 print ''
-timeRun = 200*ms
+timeRun = 510*ms
 run(timeRun, report='stdout')
 
 plot(stateRecord.t/ms, [threshold for i in range(len(stateRecord.t))], '--', label='threshold')
