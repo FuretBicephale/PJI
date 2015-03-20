@@ -10,12 +10,12 @@ up = [2, 3, 0, 1]
 time = [1, 2, 2, 3] # One movement last 2 seconds
 
 # Learning
-indices = (down + up) * 50
-times = time + [i + j for j in range(5, 500, 5) for i in time] # 3 seconds between 2 movements
+indices = (down + up) * 20
+times = time + [i + j for j in range(5, 200, 5) for i in time] # 3 seconds between 2 movements
 
 # After learning
-indices += (up + down + down + up) * 25
-times += [i + j for j in range(510, 1010, 5) for i in time]
+indices += (up + down + down + down) * 10
+times += [i + j for j in range(210, 410, 5) for i in time]
 
 times *= ms
 input = SpikeGeneratorGroup(nbPixels * nbPixelStates, indices, times)
@@ -86,9 +86,12 @@ recordInput = SpikeMonitor(input) # Record input layer spikes
 stateRecord = StateMonitor(output, ('v', 'refrac'), record = True) # Record the state of each neurons of the output layer
 synapsesRecord = StateMonitor(synapses, ('w', 'dwPre', 'dwPost'), record = True) # Record the state of each synapses
 
+# Save the state of the network
+store()
+
 # Run
 print ''
-timeRun = 500*ms
+timeRun = 200*ms
 run(timeRun, report='stdout')
 
 # End
@@ -97,7 +100,7 @@ run(timeRun, report='stdout')
 # print 'count = ', record.count
 # print 'spikes = ', record.num_spikes
 # print record.it
-#
+
 # print ''
 # print 'Input'
 # print 'count = ', recordInput.count
@@ -114,18 +117,51 @@ run(timeRun, report='stdout')
 # print 'dwPre = ', synapsesRecord.dwPre
 # print 'dwPost = ', synapsesRecord.dwPost
 
-# plot(stateRecord.t/ms, [threshold for i in range(len(stateRecord.t))], '--', label='threshold')
+# plot(stateRecord.t/ms, [threshold for i in range(len(stateRecord.t))], '--',
+#       label='threshold')
 # for i in range(nbOutput) :
 #     plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
 # legend()
 # show()
+
+# Verify if the system has learned the pattern
+learned = True
+for i in range(1, 5):
+    print(record.i[len(record.i) - i], " ", record.t[len(record.t) - i])
+    if(record.i[len(record.i) - i] == record.i[len(record.i) - (i+1)] or
+            record.t[len(record.t) - i] == record.t[len(record.t) - (i+1)]):
+        learned = False
+
+# Rerun until the learning is good
+while(not learned):
+
+    # Restore initial network
+    restore()
+
+    # Change initial weight of synapses
+    synapses.w = '(rand() * wInitDeviation) + (wInitAverage - wInitDeviation/2)'
+
+    # Rerun
+    print ''
+    print 'The learning was wrong. Re-running the simulation'
+    timeRun = 200*ms
+    run(timeRun, report='stdout')
+
+    # Re-Verify if the system has learned the pattern
+    learned = True
+    for i in range(1, 5):
+        print(record.i[len(record.i) - i], " ", record.t[len(record.t) - i])
+        if(record.i[len(record.i) - i] == record.i[len(record.i) - (i+1)] or
+                record.t[len(record.t) - i] == record.t[len(record.t) - (i+1)]):
+            learned = False
 
 # Second simulation
 inhibition.connect(False) # Disconnect inhibition
 synapses.apprentissage = 0
 
 print ''
-timeRun = 510*ms
+print 'Simulation without learning'
+timeRun = 210*ms
 run(timeRun, report='stdout')
 
 plot(stateRecord.t/ms, [threshold for i in range(len(stateRecord.t))], '--', label='threshold')
