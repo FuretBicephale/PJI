@@ -1,4 +1,5 @@
 from brian2 import *
+from random import gauss
 
 ### Input neurons - 2 pixels with 2 states (ON/OFF).
 nbPixels = 2;
@@ -13,9 +14,13 @@ time = [1, 2, 2, 3] # One movement last 2 seconds
 indices = (down + up) * 20
 times = time + [i + j for j in range(5, 200, 5) for i in time] # 3 seconds between 2 movements
 
+# Test for success
+indices += (down + up) * 3
+times += [i + j for j in range(210, 240, 5) for i in time]
+
 # After learning
 indices += (up + down + down + down) * 10
-times += [i + j for j in range(210, 410, 5) for i in time]
+times += [i + j for j in range(250, 450, 5) for i in time]
 
 times *= ms
 input = SpikeGeneratorGroup(nbPixels * nbPixelStates, indices, times)
@@ -24,8 +29,8 @@ input = SpikeGeneratorGroup(nbPixels * nbPixelStates, indices, times)
 nbOutput = 2;
 
 tLeak = 5*ms # Leak time
-tRefrac = 4*ms # Minimum time between two presynaptics spikes
-tInhib = 3*ms # Minimum time before an inhibited spike can receive presynaptics spikes agains
+tRefrac = 3*ms # Minimum time between two presynaptics spikes
+tInhib = 2*ms # Minimum time before an inhibited spike can receive presynaptics spikes agains
 
 # Neurons model
 eqs = '''dv/dt = -v/tLeak : volt (unless refractory)
@@ -40,7 +45,7 @@ output.refrac = tRefrac
 
 ### Synapses - Each input is linked to each output
 wInitAverage = 500*volt # Initial synaptic weight values
-wInitDeviation = 200*volt
+wInitDeviation = 150*volt
 wMax = 1000*volt # Maximum Synaptic weight
 wMin = 1*volt # Minimum synaptic weight
 
@@ -71,8 +76,14 @@ postEqs = '''tPost = t
 synapses = Synapses(input, target=output, model=synapsesModel, pre=preEqs, post=postEqs)
 synapses.connect(True) # Connecting every neurons of the first layer to every neurons of the second one
 
-# Initialize synaptic weight randomly between wMin and wMax
-synapses.w = '(rand() * wInitDeviation) + (wInitAverage - wInitDeviation/2)'
+# Initialize synaptic weight with a gauss distribution
+for i in range(nbPixels * nbPixelStates):
+    for  j in range(nbOutput):
+        synapses.w[i,j] = clip(
+            gauss(wInitAverage, wInitDeviation),
+            wMin,
+            wMax)
+
 synapses.apprentissage = 1
 
 # Inhibition
@@ -91,8 +102,9 @@ store()
 
 # Run
 print ''
-timeRun = 200*ms
+timeRun = 240*ms
 run(timeRun, report='stdout')
+nbTry = 1
 
 # End
 # print ''
@@ -137,14 +149,19 @@ while(not learned):
 
     # Restore initial network
     restore()
+    nbTry = nbTry + 1
 
-    # Change initial weight of synapses
-    synapses.w = '(rand() * wInitDeviation) + (wInitAverage - wInitDeviation/2)'
+    # Initialize synaptic weight with a gauss distribution
+    for i in range(nbPixels * nbPixelStates):
+        for  j in range(nbOutput):
+            synapses.w[i,j] = clip(
+                gauss(wInitAverage, wInitDeviation),
+                wMin,
+                wMax)
 
     # Rerun
     print ''
     print 'The learning was wrong. Re-running the simulation'
-    timeRun = 200*ms
     run(timeRun, report='stdout')
 
     # Re-Verify if the system has learned the pattern
@@ -164,6 +181,35 @@ print 'Simulation without learning'
 timeRun = 210*ms
 run(timeRun, report='stdout')
 
+# Print configuration and result
+print ''
+print 'Configuration :'
+print ''
+print '* Threshold = ', threshold
+print '* Reset = ', reset
+print ''
+print ''
+print '* Leak = ', tLeak
+print '* Refraction = ', tRefrac
+print '* Inhibition = ', tInhib
+print ''
+print ''
+print '* Init weight = ', wInitAverage
+print '* Init weight deviation = ', wInitDeviation
+print '* Max weight = ', wMax
+print '* Min weight = ', wMin
+print ''
+print ''
+print '* LTP = ', tLTP
+print '* a (Post) = ', aPost
+print '* b (Post) = ', bPost
+print '* a (Pre) = ', aPre
+print '* b (Pre) = ', bPre
+print ''
+print ''
+print '* Try count = ', nbTry
+
+# Display simulation plot
 plot(stateRecord.t/ms, [threshold for i in range(len(stateRecord.t))], '--', label='threshold')
 for i in range(nbOutput) :
     plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
