@@ -332,3 +332,179 @@ Use gaussian distribution for synaptic weight
 
 * Number of iterations = 200
 * Success count = 23
+
+### Results n°10
+
+##### Configuration
+
+Learned pattern : Down, Up - 200ms
+
+Use gaussian distribution for synaptic weight
+
+
+* Threshold = 800 volts
+* Reset = 0 volt
+
+
+* Leak = 3ms
+* Refraction = 9ms
+* Inhibition = 3ms
+
+
+* Init weight = 500 volts
+* Init weight deviation = 150 volts
+* Max weight = 1000 volts
+* Min weight = 1 volt
+
+
+* LTP = 2ms
+* a (Pre) = 100 volts
+* b (Pre) = 0 volt
+* a (Post) = 50 volts
+* b (Post) = 0 volt
+
+##### Results
+
+* Number of iterations = 100
+* Success count = 2
+
+
+### Results n°11
+
+##### Configuration
+
+Learned pattern : Down, Up - 200ms
+
+Use gaussian distribution for synaptic weight
+
+
+* Threshold = 800 volts
+* Reset = 0 volt
+
+
+* Leak = 9ms
+* Refraction = 9ms
+* Inhibition = 3ms
+
+
+* Init weight = 500 volts
+* Init weight deviation = 150 volts
+* Max weight = 1000 volts
+* Min weight = 1 volt
+
+
+* LTP = 2ms
+* a (Pre) = 100 volts
+* b (Pre) = 0 volt
+* a (Post) = 50 volts
+* b (Post) = 0 volt
+
+##### Results
+
+* Number of iterations = 100
+* Success count = 46
+
+### Results n°12
+
+##### Configuration
+
+Learned pattern : Down, Up - 200ms
+
+Use gaussian distribution for synaptic weight
+
+
+* Threshold = 500 volts
+* Reset = 0 volt
+
+
+* Leak = 3ms
+* Refraction = 9ms
+* Inhibition = 3ms
+
+
+* Init weight = 500 volts
+* Init weight deviation = 150 volts
+* Max weight = 1000 volts
+* Min weight = 1 volt
+
+
+* LTP = 2ms
+* a (Pre) = 100 volts
+* b (Pre) = 0 volt
+* a (Post) = 50 volts
+* b (Post) = 0 volt
+
+##### Results
+
+* Number of iterations = 100
+* Success count = 70
+
+### Results n°13
+
+##### Configuration
+
+Learned pattern : Down, Up - 200ms
+
+Use gaussian distribution for synaptic weight
+
+
+* Threshold = 450 volts
+* Reset = 0 volt
+
+
+* Leak = 3ms
+* Refraction = 9ms
+* Inhibition = 3ms
+
+
+* Init weight = 500 volts
+* Init weight deviation = 150 volts
+* Max weight = 1000 volts
+* Min weight = 1 volt
+
+
+* LTP = 2ms
+* a (Pre) = 100 volts
+* b (Pre) = 0 volt
+* a (Post) = 50 volts
+* b (Post) = 0 volt
+
+##### Results
+
+* Number of iterations = 100
+* Success count = 50
+
+### Results n°13
+
+##### Configuration
+
+Learned pattern : Down, Up - 200ms
+
+Use gaussian distribution for synaptic weight
+
+
+* Threshold = 550 volts
+* Reset = 0 volt
+
+
+* Leak = 3ms
+* Refraction = 9ms
+* Inhibition = 3ms
+
+
+* Init weight = 500 volts
+* Init weight deviation = 150 volts
+* Max weight = 1000 volts
+* Min weight = 1 volt
+
+
+* LTP = 2ms
+* a (Pre) = 100 volts
+* b (Pre) = 0 volt
+* a (Post) = 50 volts
+* b (Post) = 0 volt
+
+##### Results
+
+* Number of iterations = 100
+* Success count = 60

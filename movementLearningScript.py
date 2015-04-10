@@ -55,7 +55,7 @@ eqs = '''dv/dt = -v/tLeak : volt (unless refractory)
          refrac : second
          lastInhib : second'''
 
-threshold = 800*volt # Neurons send a spike when this threshold is reached
+threshold = 500*volt # Neurons send a spike when this threshold is reached
 reset = 0*volt # Initial neurons value
 
 output = NeuronGroup(nbOutput, eqs, threshold='v>=threshold', reset='v=reset', refractory='refrac')
