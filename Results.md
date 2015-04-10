@@ -165,6 +165,7 @@ Learned pattern : Down, Up - 200ms
 ##### Configuration
 
 Learned pattern : Down, Up - 200ms
+
 Use gaussian distribution for synaptic weight
 
 
@@ -192,3 +193,142 @@ Use gaussian distribution for synaptic weight
 ##### Results
 
 * Try count = 2 - 1 - 1 - 5 - 7
+
+### Results n°7
+
+##### Configuration
+
+Learned pattern : Down, Up - 200ms
+
+Use gaussian distribution for synaptic weight
+
+* Threshold = 800 volts
+* Reset = 0 volt
+
+
+* Leak = 5ms
+* Refraction = 2ms
+* Inhibition = 1ms
+
+
+* Init weight = 500 volts
+* Init weight deviation = 150 volts
+* Max weight = 1000 volts
+* Min weight = 1 volt
+
+
+* LTP = 2ms
+* a (Pre) = 100 volts
+* b (Pre) = 0 volt
+* a (Post) = 50 volts
+* b (Post) = 0 volt
+
+##### Results
+
+* Number of iterations = 200
+* Success count = 23
+
+### Results n°8
+
+##### Configuration
+
+Learned pattern : Down, Up - 200ms
+
+Use gaussian distribution for synaptic weight
+
+
+* Threshold = 800 volts
+* Reset = 0 volt
+
+
+* Leak = 5ms
+* Refraction = 3ms
+* Inhibition = 2ms
+
+
+* Init weight = 500 volts
+* Init weight deviation = 150 volts
+* Max weight = 1000 volts
+* Min weight = 1 volt
+
+
+* LTP = 2ms
+* a (Pre) = 100 volts
+* b (Pre) = 0 volt
+* a (Post) = 50 volts
+* b (Post) = 0 volt
+
+##### Results
+
+* Number of iterations = 200
+* Success count = 26
+
+### Results n°9
+
+##### Configuration
+
+Learned pattern : Down, Up - 200ms
+
+Use gaussian distribution for synaptic weight
+
+
+* Threshold = 800 volts
+* Reset = 0 volt
+
+
+* Leak = 5ms
+* Refraction = 3ms
+* Inhibition = 1ms
+
+
+* Init weight = 500 volts
+* Init weight deviation = 150 volts
+* Max weight = 1000 volts
+* Min weight = 1 volt
+
+
+* LTP = 2ms
+* a (Pre) = 100 volts
+* b (Pre) = 0 volt
+* a (Post) = 50 volts
+* b (Post) = 0 volt
+
+##### Results
+
+* Number of iterations = 200
+* Success count = 20
+
+### Results n°9
+
+##### Configuration
+
+Learned pattern : Down, Up - 200ms
+
+Use gaussian distribution for synaptic weight
+
+
+* Threshold = 800 volts
+* Reset = 0 volt
+
+
+* Leak = 5ms
+* Refraction = 2ms
+* Inhibition = 2ms
+
+
+* Init weight = 500 volts
+* Init weight deviation = 150 volts
+* Max weight = 1000 volts
+* Min weight = 1 volt
+
+
+* LTP = 2ms
+* a (Pre) = 100 volts
+* b (Pre) = 0 volt
+* a (Post) = 50 volts
+* b (Post) = 0 volt
+
+##### Results
+
+* Number of iterations = 200
+* Success count = 23

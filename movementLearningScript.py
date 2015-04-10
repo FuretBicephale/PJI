@@ -1,7 +1,31 @@
-##### Faire un script generant des lignes de commande lancant des simulations. Ces lignes contiendront les variables en paramètres. Une ligne de commande fait appel à 100 simulations avec les mêmes paramètres et calcul la moyenne de réussite.
-
+from optparse import OptionParser
 from brian2 import *
 from random import gauss
+
+### Parser
+parser = OptionParser()
+parser.add_option("-i", "--inhibition",
+    help='''Specify inhibition time in ms. Required.''')
+parser.add_option("-l", "--leak",
+    help='''Specify leak time in ms. Required.''')
+parser.add_option("-n", "--number",
+    help='''Specify number of learning test iterations.\r\n
+        100 iterations by defaults, integers only.''',
+    default=100)
+parser.add_option("-r", "--refraction",
+    help='''Specify refraction time in ms. Required.''')
+
+(options, args) = parser.parse_args()
+
+try :
+    tInhib = float(options.inhibition) * ms
+    tLeak = float(options.leak) * ms
+    tRefrac = float(options.refraction) * ms
+    nIter = int(options.number)
+except :
+    print "Error : Invalid argument. See help for more informations."
+    parser.print_help()
+    exit(False)
 
 ### Input neurons - 2 pixels with 2 states (ON/OFF).
 nbPixels = 2;
@@ -20,19 +44,11 @@ times = time + [i + j for j in range(5, 200, 5) for i in time] # 3 seconds betwe
 indices += (down + up) * 3
 times += [i + j for j in range(210, 240, 5) for i in time]
 
-# After learning
-indices += (up + down + down + down) * 10
-times += [i + j for j in range(250, 450, 5) for i in time]
-
 times *= ms
 input = SpikeGeneratorGroup(nbPixels * nbPixelStates, indices, times)
 
 ### Output neurons - We want to know if the movement is ascending or descending
 nbOutput = 2;
-
-tLeak = 5*ms # Leak time
-tRefrac = 3*ms # Minimum time between two presynaptics spikes
-tInhib = 2*ms # Minimum time before an inhibited spike can receive presynaptics spikes agains
 
 # Neurons model
 eqs = '''dv/dt = -v/tLeak : volt (unless refractory)
@@ -86,8 +102,6 @@ for i in range(nbPixels * nbPixelStates):
             wMin,
             wMax)
 
-synapses.apprentissage = 1
-
 # Inhibition
 inhibition = Synapses(output, model='w : volt', pre='lastInhib = t * int(not_refractory)')
 inhibition.connect("i != j") # Every neurons of the layer are connected to each other
@@ -95,65 +109,33 @@ inhibition.w = wInitAverage
 
 # Monitor
 record = SpikeMonitor(output) # Record output layer spikes
-recordInput = SpikeMonitor(input) # Record input layer spikes
-stateRecord = StateMonitor(output, ('v', 'refrac'), record = True) # Record the state of each neurons of the output layer
-synapsesRecord = StateMonitor(synapses, ('w', 'dwPre', 'dwPost'), record = True) # Record the state of each synapses
 
 # Save the state of the network
 store()
 
 # Run
-print ''
 timeRun = 240*ms
-run(timeRun, report='stdout')
-nbTry = 1
+nbSuccess = 0
+for i in range(nIter):
+    print '''\r\n
+        Simulation {}
+        \r\n'''.format(i)
+    run(timeRun, report='stdout')
 
-# End
-# print ''
-# print 'First layer'
-# print 'count = ', record.count
-# print 'spikes = ', record.num_spikes
-# print record.it
+    # Verify if the system has learned the pattern
+    learned = True
+    for i in range(1, 5):
+        if(record.i[len(record.i) - i] == record.i[len(record.i) - (i+1)] or
+                record.t[len(record.t) - i] == record.t[len(record.t) - (i+1)]):
+            learned = False
 
-# print ''
-# print 'Input'
-# print 'count = ', recordInput.count
-# print 'spikes = ', recordInput.num_spikes
-# print recordInput.it
-#
-# print ''
-# print 'First layer state'
-# print 'v = ', stateRecord.v
-#
-# print ''
-# print 'Synapses state'
-# print 'w = ', synapsesRecord.w
-# print 'dwPre = ', synapsesRecord.dwPre
-# print 'dwPost = ', synapsesRecord.dwPost
+    if(learned):
+        nbSuccess = nbSuccess + 1
 
-# plot(stateRecord.t/ms, [threshold for i in range(len(stateRecord.t))], '--',
-#       label='threshold')
-# for i in range(nbOutput) :
-#     plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
-# legend()
-# show()
-
-# Verify if the system has learned the pattern
-learned = True
-for i in range(1, 5):
-    print(record.i[len(record.i) - i], " ", record.t[len(record.t) - i])
-    if(record.i[len(record.i) - i] == record.i[len(record.i) - (i+1)] or
-            record.t[len(record.t) - i] == record.t[len(record.t) - (i+1)]):
-        learned = False
-
-# Rerun until the learning is good
-while(not learned):
-
-    # Restore initial network
+    # Restore for next iteration
     restore()
-    nbTry = nbTry + 1
 
-    # Initialize synaptic weight with a gauss distribution
+    # Re-initialize synaptic weight with a gauss distribution
     for i in range(nbPixels * nbPixelStates):
         for  j in range(nbOutput):
             synapses.w[i,j] = clip(
@@ -161,29 +143,7 @@ while(not learned):
                 wMin,
                 wMax)
 
-    # Rerun
-    print ''
-    print 'The learning was wrong. Re-running the simulation'
-    run(timeRun, report='stdout')
-
-    # Re-Verify if the system has learned the pattern
-    learned = True
-    for i in range(1, 5):
-        print(record.i[len(record.i) - i], " ", record.t[len(record.t) - i])
-        if(record.i[len(record.i) - i] == record.i[len(record.i) - (i+1)] or
-                record.t[len(record.t) - i] == record.t[len(record.t) - (i+1)]):
-            learned = False
-
-# Second simulation
-inhibition.connect(False) # Disconnect inhibition
-synapses.apprentissage = 0
-
-print ''
-print 'Simulation without learning'
-timeRun = 210*ms
-run(timeRun, report='stdout')
-
-# Print configuration and result
+# Results
 print ''
 print 'Configuration :'
 print ''
@@ -209,11 +169,5 @@ print '* a (Pre) = ', aPre
 print '* b (Pre) = ', bPre
 print ''
 print ''
-print '* Try count = ', nbTry
-
-# Display simulation plot
-plot(stateRecord.t/ms, [threshold for i in range(len(stateRecord.t))], '--', label='threshold')
-for i in range(nbOutput) :
-    plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
-legend()
-show()
+print '* Number of iterations = ', nIter
+print '* Success count = ', nbSuccess
