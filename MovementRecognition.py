@@ -28,16 +28,16 @@ input = SpikeGeneratorGroup(nbPixels * nbPixelStates, indices, times)
 ### Output neurons - We want to know if the movement is ascending or descending
 nbOutput = 2;
 
-tLeak = 5*ms # Leak time
-tRefrac = 3*ms # Minimum time between two presynaptics spikes
-tInhib = 2*ms # Minimum time before an inhibited spike can receive presynaptics spikes agains
+tLeak = 3*ms # Leak time
+tRefrac = 9*ms # Minimum time between two presynaptics spikes
+tInhib = 3*ms # Minimum time before an inhibited spike can receive presynaptics spikes agains
 
 # Neurons model
 eqs = '''dv/dt = -v/tLeak : volt (unless refractory)
          refrac : second
          lastInhib : second'''
 
-threshold = 800*volt # Neurons send a spike when this threshold is reached
+threshold = 500*volt # Neurons send a spike when this threshold is reached
 reset = 0*volt # Initial neurons value
 
 output = NeuronGroup(nbOutput, eqs, threshold='v>=threshold', reset='v=reset', refractory='refrac')
@@ -70,8 +70,8 @@ preEqs = '''tPre = t
 # So dwPre * (ltpCondition) = 0 if ltpCondition is false, dwPre otherwise
 # And dwPost * (ltpCondition != 1) = 0 if ltpCondition is true (== 0), dwPost otherwise
 postEqs = '''tPost = t
-             w = clip(w + dwPre * ltpCondition * apprentissage, wMin, wMax)
-             w = clip(w - dwPost * (ltpCondition == 0) * apprentissage, wMin, wMax)'''
+             w = clip(w + dwPre * ltpCondition, wMin, wMax)
+             w = clip(w - dwPost * (ltpCondition == 0), wMin, wMax)'''
 synapses = Synapses(input, target=output, model=synapsesModel, pre=preEqs, post=postEqs)
 synapses.connect(True) # Connecting every neurons of the first layer to every neurons of the second one
 
@@ -169,23 +169,86 @@ while(not learned):
                 record.t[len(record.t) - i] == record.t[len(record.t) - (i+1)]):
             learned = False
 
+# Display simulation plot
+plot(stateRecord.t/ms, [threshold for i in range(len(stateRecord.t))], '--', label='threshold')
+for i in range(nbOutput) :
+    plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
+legend()
+show()
+
 # Second simulation
 nbPixels = 3
 
 down2 = [0, 1, 4, 5]
-up2 = [2, 3, 0, 1]
+up2 = [4, 5, 0, 1]
 
 # Movements
 indices = up + down + down2 + up2 + down + up + up # Up - Down - Down - Up - Down - Up - Up
 times = time + [i + j for j in range(5, 35, 5) for i in time]
+times *= ms
 
 inputTest = SpikeGeneratorGroup(nbPixels * nbPixelStates, indices, times)
 
-# print ''
-# print 'Simulation without learning'
-# timeRun = 210*ms
-# run(timeRun, report='stdout')
-#
+### Output neurons
+nbOutput = (nbPixels-1) * 2;
+
+# Neurons model
+# threshold = 3900*volt
+eqsTest = '''dv/dt = -v/tLeak : volt'''
+
+outputTest = NeuronGroup(nbOutput, eqsTest, threshold='v>=threshold', reset='v=reset')
+
+### Synapses
+
+synapsesModelTest = '''w : volt'''
+preEqsTest = '''v = v * exp(-(t-lastupdate)/tLeak) + w'''
+synapsesTest = Synapses(inputTest, target=outputTest, model=synapsesModelTest, pre=preEqsTest)
+
+print synapses.w[0, 0]
+print synapses.w[0, 1]
+print synapses.w[1, 0]
+print synapses.w[1, 1]
+print synapses.w[2, 0]
+print synapses.w[2, 1]
+print synapses.w[3, 0]
+print synapses.w[3, 1]
+
+for i in range(nbPixels):
+    if(i != nbPixels - 1):
+        synapsesTest.connect([i*2, i*2, i*2+1, i*2+1], [i*2, i*2+1, i*2, i*2+1])
+        synapsesTest.w[i*2, i*2] = synapses.w[0, 0]
+        synapsesTest.w[i*2, i*2+1] = synapses.w[0, 1]
+        synapsesTest.w[i*2+1, i*2] = synapses.w[1, 0]
+        synapsesTest.w[i*2+1, i*2+1] = synapses.w[1, 1]
+    for j in range(i):
+        synapsesTest.connect([i*2, i*2, i*2+1, i*2+1], [j*2, j*2+1, j*2, j*2+1])
+        synapsesTest.w[i*2, j*2] = synapses.w[2, 0]
+        synapsesTest.w[i*2, j*2+1] = synapses.w[2, 1]
+        synapsesTest.w[i*2+1, j*2] = synapses.w[3, 0]
+        synapsesTest.w[i*2+1, j*2+1] = synapses.w[3, 1]
+
+# Initialize synaptic weight with a gauss distribution
+for i in range(nbPixels * nbPixelStates):
+    for  j in range(nbOutput):
+        synapses.w[i,j] = clip(
+            gauss(wInitAverage, wInitDeviation),
+            wMin,
+            wMax)
+
+print ''
+print 'Simulation without learning'
+timeRun = 35*ms
+
+stateRecordTest = StateMonitor(outputTest, ('v'), record = True)
+
+net = Network()
+net.add(inputTest)
+net.add(outputTest)
+net.add(synapsesTest)
+net.add(stateRecordTest)
+
+net.run(timeRun, report='stdout')
+
 # # Print configuration and result
 # print ''
 # print 'Configuration :'
@@ -214,9 +277,9 @@ inputTest = SpikeGeneratorGroup(nbPixels * nbPixelStates, indices, times)
 # print ''
 # print '* Try count = ', nbTry
 #
-# # Display simulation plot
-# plot(stateRecord.t/ms, [threshold for i in range(len(stateRecord.t))], '--', label='threshold')
-# for i in range(nbOutput) :
-#     plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
-# legend()
-# show()
+# Display simulation plot
+plot(stateRecordTest.t/ms, [threshold for i in range(len(stateRecordTest.t))], '--', label='threshold')
+for i in range(nbOutput) :
+    plot(stateRecordTest.t/ms, stateRecordTest.v[i]/volt, label=i)
+legend()
+show()

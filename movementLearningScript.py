@@ -37,7 +37,7 @@ up = [2, 3, 0, 1]
 time = [1, 2, 2, 3] # One movement last 2 seconds
 
 # Learning
-indices = (down + up) * 20
+indices = down * 20 + up * 20
 times = time + [i + j for j in range(5, 200, 5) for i in time] # 3 seconds between 2 movements
 
 # Test for success
