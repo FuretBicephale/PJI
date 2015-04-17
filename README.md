@@ -22,11 +22,11 @@ Creates a neuronal system able to recognize a vertical movement between 2 pixels
 
 Currently, the synapses weight are randomly defined between two defined values. Because of this randomness, the recognition doesn't always works.
 
-### movementLearningScript
+### MovementLearningScript
 This script is very similar to 2pxMovementRecognition except it takes parameters at execution to init some variables.
 The parameters are the following :
-*-i or --inhibition = Specify inhibition time in ms. Required.
-*-l or --leak = Specify leak time in ms. Required.
-*-n or --number = Specify number of learning test iterations. 100 iterations by defaults, integers only.
-*-r or --refraction = Specify refraction time in ms. Required.
+* -i or --inhibition = Specify inhibition time in ms. Required.
+* -l or --leak = Specify leak time in ms. Required.
+* -n or --number = Specify number of learning test iterations. 100 iterations by defaults, integers only.
+* -r or --refraction = Specify refraction time in ms. Required.
 At end of execution, it will print the number of successful tries
