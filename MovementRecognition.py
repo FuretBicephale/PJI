@@ -40,10 +40,13 @@ times *= ms
 input = SpikeGeneratorGroup(nbPixels * nbPixelStates, indices, times)
 
 ### Output neurons - We want to know if the movement is ascending or descending
-nbOutput = 2;
+nbOutput = 2
 
-tLeak = 1*ms # Leak time (> Duree mouvement)
-tRefrac = 3.5*ms # Minimum time between two presynaptics spikes (> Inhibition, < Periode)
+tLeak = 1.5*ms # Leak time (> Duree mouvement)
+if(supervised):
+    tRefrac = 1.25*ms # Minimum time between two presynaptics spikes (> Inhibition, < Periode)
+else:
+    tRefrac = 3.5*ms
 tInhib = 1.5*ms # Minimum time before an inhibited spike can receive presynaptics spikes agains (= Temps entre deux mouvements)
 
 # Neurons model
@@ -65,7 +68,7 @@ output.refrac = tRefrac
 
 ### Synapses - Each input is linked to each output
 wInitAverage = 500*volt # Initial synaptic weight values
-wInitDeviation = 150*volt
+wInitDeviation = 200*volt
 wMax = 1000*volt # Maximum Synaptic weight
 wMin = 1*volt # Minimum synaptic weight
 
@@ -74,7 +77,7 @@ aPost = 50*volt # Apha values for postsynaptics spikes
 bPre = 0*volt # Beta values for presynaptics spikes
 bPost = 0*volt # Beta values for postsynaptics spikes
 
-tLTP = 2*ms # Maximum time between post and pre spikes to launch a LTP
+tLTP = 1*ms # Maximum time between post and pre spikes to launch a LTP
 
 # ltpCondition is true if the synapse deals with a Potentiation, false if it's a Depression
 synapsesModel = '''w : volt
@@ -99,14 +102,21 @@ synapses = Synapses(input, target=output, model=synapsesModel, pre=preEqs, post=
 synapses.connect(True) # Connecting every neurons of the first layer to every neurons of the second one
 
 # Initialize synaptic weight with a gauss distribution
-for i in range(nbPixels * nbPixelStates):
-    for  j in range(nbOutput):
-        synapses.w[i,j] = clip(
-            gauss(wInitAverage, wInitDeviation),
-            wMin,
-            wMax)
+if(supervised):
+    synapses.w = wInitAverage
+else:
+    for i in range(nbPixels * nbPixelStates):
+        for  j in range(nbOutput):
+            synapses.w[i,j] = clip(
+                gauss(wInitAverage, wInitDeviation),
+                wMin,
+                wMax)
 
-output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
+if(supervised):
+    # output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
+    output.thresh = 600 * volt
+else:
+    output.thresh = 600 * volt
 
 if not supervised:
     # Inhibition
@@ -152,19 +162,33 @@ else:
 # Rerun until the learning is good
 while(not learned):
 
+    # Display simulation plot
+    plot(stateRecord.t/ms, [output.thresh[0] for i in range(len(stateRecord.t))], '--', label='threshold')
+    for i in range(nbOutput) :
+        plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
+    legend()
+    show()
+
     # Restore initial network
     restore()
     nbTry = nbTry + 1
 
     # Initialize synaptic weight with a gauss distribution
-    for i in range(nbPixels * nbPixelStates):
-        for  j in range(nbOutput):
-            synapses.w[i,j] = clip(
-                gauss(wInitAverage, wInitDeviation),
-                wMin,
-                wMax)
+    if(supervised):
+        synapses.w = wInitAverage
+    else:
+        for i in range(nbPixels * nbPixelStates):
+            for  j in range(nbOutput):
+                synapses.w[i,j] = clip(
+                    gauss(wInitAverage, wInitDeviation),
+                    wMin,
+                    wMax)
 
-    output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
+    if(supervised):
+        # output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
+        output.thresh = 600 * volt
+    else:
+        output.thresh = 600 * volt
 
     # Rerun
     print ''
@@ -221,12 +245,12 @@ eqsTest = '''
     thresh : volt'''
 
 outputTest = NeuronGroup(nbOutput, eqsTest, threshold='v + dt*(v/tLeak) >= thresh', reset='v=reset')
-outputTest.thresh = 1500*volt
+outputTest.thresh = 1000*volt
 
 ### Synapses
 
 synapsesModelTest = '''w : volt'''
-preEqsTest = '''v = v + w'''
+preEqsTest = '''v = v * exp(-(t-lastupdate)/tLeak) + w'''
 synapsesTest = Synapses(inputTest, target=outputTest, model=synapsesModelTest, pre=preEqsTest)
 
 for i in range(nbPixels):

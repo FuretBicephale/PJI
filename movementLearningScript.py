@@ -55,7 +55,7 @@ times += [i + j for j in range(90, 102, 2) for i in time]
 times *= ms
 input = SpikeGeneratorGroup(nbPixels * nbPixelStates, indices, times)
 ### Output neurons - We want to know if the movement is ascending or descending
-nbOutput = 2;
+nbOutput = 2
 
 # threshold = 500*volt # Neurons send a spike when this threshold is reached
 reset = 0*volt # Initial neurons value
@@ -86,7 +86,7 @@ aPost = 50*volt # Apha values for postsynaptics spikes
 bPre = 0*volt # Beta values for presynaptics spikes
 bPost = 0*volt # Beta values for postsynaptics spikes
 
-tLTP = 2*ms # Maximum time between post and pre spikes to launch a LTP
+tLTP = 1*ms # Maximum time between post and pre spikes to launch a LTP
 
 # ltpCondition is true if the synapse deals with a Potentiation, false if it's a Depression
 synapsesModel = '''w : volt
@@ -114,14 +114,21 @@ synapses = Synapses(input, target=output, model=synapsesModel, pre=preEqs, post=
 synapses.connect(True) # Connecting every neurons of the first layer to every neurons of the second one
 
 # Initialize synaptic weight with a gauss distribution
-for i in range(nbPixels * nbPixelStates):
-    for  j in range(nbOutput):
-        synapses.w[i,j] = clip(
-            gauss(wInitAverage, wInitDeviation),
-            wMin,
-            wMax)
+if(supervised):
+    synapses.w = wInitAverage
+else:
+    for i in range(nbPixels * nbPixelStates):
+        for  j in range(nbOutput):
+            synapses.w[i,j] = clip(
+                gauss(wInitAverage, wInitDeviation),
+                wMin,
+                wMax)
 
-output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
+if(supervised):
+    # output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
+    output.thresh = 600 * volt
+else:
+    output.thresh = 600 * volt
 
 if not supervised:
     # Inhibition
@@ -207,14 +214,19 @@ for i in range(nIter):
     restore()
 
     # Re-initialize synaptic weight with a gauss distribution
-    for i in range(nbPixels * nbPixelStates):
-        for  j in range(nbOutput):
-            synapses.w[i,j] = clip(
-                gauss(wInitAverage, wInitDeviation),
-                wMin,
-                wMax)
+    if(not supervised):
+        for i in range(nbPixels * nbPixelStates):
+            for  j in range(nbOutput):
+                synapses.w[i,j] = clip(
+                    gauss(wInitAverage, wInitDeviation),
+                    wMin,
+                    wMax)
 
-    output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
+    if(supervised):
+        # output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
+        output.thresh = 600 * volt
+    else:
+        output.thresh = 600 * volt
 
 # Results
 print ''
