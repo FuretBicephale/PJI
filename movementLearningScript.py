@@ -76,13 +76,13 @@ output = NeuronGroup(nbOutput, eqs, threshold='v + dt*(v/tLeak) >= thresh',
 output.refrac = tRefrac
 
 ### Synapses - Each input is linked to each output
-wInitAverage = 500*volt # Initial synaptic weight values
-wInitDeviation = 150*volt
-wMax = 1000*volt # Maximum Synaptic weight
-wMin = 1*volt # Minimum synaptic weight
+wInitAverage = 0.800*volt # Initial synaptic weight values
+wInitDeviation = 0.150*volt
+wMax = 1.000*volt # Maximum Synaptic weight
+wMin = 0.001*volt # Minimum synaptic weight
 
-aPre = 100*volt # Alpha values for presynaptics spikes
-aPost = 50*volt # Apha values for postsynaptics spikes
+aPre = 0.100*volt # Alpha values for presynaptics spikes
+aPost = 0.050*volt # Apha values for postsynaptics spikes
 bPre = 0*volt # Beta values for presynaptics spikes
 bPost = 0*volt # Beta values for postsynaptics spikes
 
@@ -99,10 +99,10 @@ synapsesModel = '''w : volt
 
 if not supervised:
     preEqs = '''tPre = t
-                v = v * (t - lastInhib < tInhib and lastInhib != 0 * ms) + (v * exp(-(t-lastupdate)/tLeak) + w) *  (t - lastInhib >= tInhib or lastInhib == 0 * ms)'''
+                v = v * (t - lastInhib < tInhib and lastInhib != 0 * ms) + (v * exp(-(t-lastupdate)/tLeak) + w) * (t - lastInhib >= tInhib or lastInhib == 0 * ms)'''
 else:
     preEqs = '''tPre = t
-                v = v * exp(-(t-lastupdate)/tLeak) + w'''
+                v = v + w'''
 
 # If ltpCondition is False then it's equals to 0, 1 otherwise
 # So dwPre * (ltpCondition) = 0 if ltpCondition is false, dwPre otherwise
@@ -126,9 +126,9 @@ else:
 
 if(supervised):
     # output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
-    output.thresh = 600 * volt
+    output.thresh = 0.500 * volt
 else:
-    output.thresh = 600 * volt
+    output.thresh = 1.000 * volt
 
 if not supervised:
     # Inhibition
@@ -222,11 +222,11 @@ for i in range(nIter):
                     wMin,
                     wMax)
 
-    if(supervised):
-        # output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
-        output.thresh = 600 * volt
-    else:
-        output.thresh = 600 * volt
+    # if(supervised):
+    #     # output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
+    #     output.thresh = 600 * volt
+    # else:
+    #     output.thresh = 600 * volt
 
 # Results
 print ''

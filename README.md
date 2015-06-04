@@ -29,5 +29,17 @@ The parameters are the following :
 * -l or --leak = Specify leak time in ms. Required.
 * -n or --number = Specify number of learning test iterations. 100 iterations by defaults, integers only.
 * -r or --refraction = Specify refraction time in ms. Required.
+* -s = Defines if the learning is supervised or not. Default = False
 
 At end of execution, it will print the number of successful tries
+
+### MovementRecognition
+This script will create a neuronal system able to recognize a vertical movement between 2 pixels. Then, it will redistribute the synapse weight to a new neuronal system able to recognize a vertical movement between n pixels
+This script has one parameters : -s = Defines if the learning is supervised or not. Default = False
+
+### nPxMovementRecognition
+This script is very similar to 2pxMovementRecognition except it will create a neuronal system able to recognize a vertical movement between n pixels. The variables are given with parameters :
+* -i or --inhibition = Specify inhibition time in ms. Required.
+* -l or --leak = Specify leak time in ms. Required.
+* -n or --number = Specify number of learning test iterations. 100 iterations by defaults, integers only.
+* -r or --refraction = Specify refraction time in ms. Required.

@@ -44,7 +44,7 @@ nbOutput = 2
 
 tLeak = 1.5*ms # Leak time (> Duree mouvement)
 if(supervised):
-    tRefrac = 1.25*ms # Minimum time between two presynaptics spikes (> Inhibition, < Periode)
+    tRefrac = 1*ms # Minimum time between two presynaptics spikes (> Inhibition, < Periode)
 else:
     tRefrac = 3.5*ms
 tInhib = 1.5*ms # Minimum time before an inhibited spike can receive presynaptics spikes agains (= Temps entre deux mouvements)
@@ -67,13 +67,13 @@ output = NeuronGroup(nbOutput, eqs, threshold='v + dt*(v/tLeak) >= thresh', rese
 output.refrac = tRefrac
 
 ### Synapses - Each input is linked to each output
-wInitAverage = 500*volt # Initial synaptic weight values
-wInitDeviation = 200*volt
-wMax = 1000*volt # Maximum Synaptic weight
-wMin = 1*volt # Minimum synaptic weight
+wInitAverage = 0.500*volt # Initial synaptic weight values
+wInitDeviation = 0.200*volt
+wMax = 1.000*volt # Maximum Synaptic weight
+wMin = 0.001*volt # Minimum synaptic weight
 
-aPre = 100*volt # Alpha values for presynaptics spikes
-aPost = 50*volt # Apha values for postsynaptics spikes
+aPre = 0.100*volt # Alpha values for presynaptics spikes
+aPost = 0.050*volt # Apha values for postsynaptics spikes
 bPre = 0*volt # Beta values for presynaptics spikes
 bPost = 0*volt # Beta values for postsynaptics spikes
 
@@ -91,7 +91,7 @@ if not supervised:
                 v = v * (t - lastInhib < tInhib and lastInhib != 0 * ms) + (v * exp(-(t-lastupdate)/tLeak) + w) *  (t - lastInhib >= tInhib or lastInhib == 0 * ms)'''
 else:
     preEqs = '''tPre = t
-                v = v * exp(-(t-lastupdate)/tLeak) + w'''
+                v = v + w'''
 # If ltpCondition is False then it's equals to 0, 1 otherwise
 # So dwPre * (ltpCondition) = 0 if ltpCondition is false, dwPre otherwise
 # And dwPost * (ltpCondition != 1) = 0 if ltpCondition is true (== 0), dwPost otherwise
@@ -114,9 +114,9 @@ else:
 
 if(supervised):
     # output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
-    output.thresh = 600 * volt
+    output.thresh = 0.500 * volt
 else:
-    output.thresh = 600 * volt
+    output.thresh = 0.600 * volt
 
 if not supervised:
     # Inhibition
@@ -163,11 +163,11 @@ else:
 while(not learned):
 
     # Display simulation plot
-    plot(stateRecord.t/ms, [output.thresh[0] for i in range(len(stateRecord.t))], '--', label='threshold')
-    for i in range(nbOutput) :
-        plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
-    legend()
-    show()
+    # plot(stateRecord.t/ms, [output.thresh[0] for i in range(len(stateRecord.t))], '--', label='threshold')
+    # for i in range(nbOutput) :
+    #     plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
+    # legend()
+    # show()
 
     # Restore initial network
     restore()
@@ -184,11 +184,11 @@ while(not learned):
                     wMin,
                     wMax)
 
-    if(supervised):
-        # output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
-        output.thresh = 600 * volt
-    else:
-        output.thresh = 600 * volt
+    # if(supervised):
+    #     # output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
+    #     output.thresh = 600 * volt
+    # else:
+    #     output.thresh = 600 * volt
 
     # Rerun
     print ''
@@ -212,14 +212,14 @@ for i in range(nbOutput) :
 legend()
 show()
 
-print synapses.w[0,0]
-print synapses.w[0,1]
-print synapses.w[1,0]
-print synapses.w[1,1]
-print synapses.w[2,0]
-print synapses.w[2,1]
-print synapses.w[3,0]
-print synapses.w[3,1]
+# print synapses.w[0,0]
+# print synapses.w[0,1]
+# print synapses.w[1,0]
+# print synapses.w[1,1]
+# print synapses.w[2,0]
+# print synapses.w[2,1]
+# print synapses.w[3,0]
+# print synapses.w[3,1]
 
 # Second simulation
 nbPixels = 3
@@ -228,10 +228,12 @@ down2 = [1, 4]
 up2 = [5, 0]
 down3 = [3, 4]
 up3 = [5, 2]
+faux_positif = [3, 5]
+up_down = [0, 3, 4]
 
 # Movements
-indices = up + down + down2 + up2 + down3 + up3 + up # Up - Down - Down - Up - Down - Up - Up
-times = time + [i + j for j in range(2, 14, 2) for i in time]
+indices = up + down + down2 + up2 + down3 + up3 + up + faux_positif + up_down # Up - Down - Down - Up - Down - Up - Up
+times = time + [i + j for j in range(2, 16, 2) for i in time] + [18, 18, 18]
 times *= ms
 
 inputTest = SpikeGeneratorGroup(nbPixels * nbPixelStates, indices, times)
@@ -245,21 +247,21 @@ eqsTest = '''
     thresh : volt'''
 
 outputTest = NeuronGroup(nbOutput, eqsTest, threshold='v + dt*(v/tLeak) >= thresh', reset='v=reset')
-outputTest.thresh = 1000*volt
+outputTest.thresh = 2.900 * volt
 
 ### Synapses
 
 synapsesModelTest = '''w : volt'''
-preEqsTest = '''v = v * exp(-(t-lastupdate)/tLeak) + w'''
+preEqsTest = '''v = v + w'''
 synapsesTest = Synapses(inputTest, target=outputTest, model=synapsesModelTest, pre=preEqsTest)
 
 for i in range(nbPixels):
     if(i != nbPixels - 1):
         synapsesTest.connect([i*2, i*2, i*2+1, i*2+1], [i*2, i*2+1, i*2, i*2+1])
-        synapsesTest.w[i*2, i*2] = synapses.w[0, 0]
-        synapsesTest.w[i*2, i*2+1] = synapses.w[0, 1]
-        synapsesTest.w[i*2+1, i*2] = synapses.w[1, 0]
-        synapsesTest.w[i*2+1, i*2+1] = synapses.w[1, 1]
+        synapsesTest.w[i*2, i*2] = synapses.w[0, 0] * 2
+        synapsesTest.w[i*2, i*2+1] = synapses.w[0, 1] * 2
+        synapsesTest.w[i*2+1, i*2] = synapses.w[1, 0] * 2
+        synapsesTest.w[i*2+1, i*2+1] = synapses.w[1, 1] * 2
     for j in range(i):
         synapsesTest.connect([i*2, i*2, i*2+1, i*2+1], [j*2, j*2+1, j*2, j*2+1])
         synapsesTest.w[i*2, j*2] = synapses.w[2, 0]
@@ -277,7 +279,7 @@ for i in range(nbPixels * nbPixelStates):
 
 print ''
 print 'Simulation without learning'
-timeRun = 15*ms
+timeRun = 20*ms
 
 stateRecordTest = StateMonitor(outputTest, ('v'), record = True)
 
