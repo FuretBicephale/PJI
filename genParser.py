@@ -1,4 +1,5 @@
 from optparse import OptionParser
+from brian2 import *
 
 # Create a generic parser for neural system simulation
 def genParser():

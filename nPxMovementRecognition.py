@@ -4,27 +4,37 @@ from brian2 import *
 # Parser
 parser = genParser.genParser()
 args = genParser.getArgs(parser)
+tInhib = args['tInhib']
+tLeak = args['tLeak']
+tRefrac = args['tRefrac']
+tLTP = args['tLTP']
+threshold = args['threshold']
 
 # Input
 nbPixels = 4
 nbPixelStates = 2
 nbPatterns = 500
 if args['randomPattern']:
-    input = genInput.genRandomVerticalMovements(nbPixels, nbPixelsStates, nbPatterns)
+    input = genInput.genRandomVerticalMovements(nbPixels, nbPixelStates, nbPatterns)
 else:
-    input = genInput.genAlternateVerticalMovements(nbPixels, nbPixelsStates, nbPatterns)
+    input = genInput.genAlternateVerticalMovements(nbPixels, nbPixelStates, nbPatterns)
 
-output = genLayer.genNeurons((nbPixels - 1) * 2, args['threshold'], 0, args['tRefrac'])
+output = genLayer.genNeurons((nbPixels - 1) * 2, tRefrac)
 
 wAverage = 0.700*volt
 wDeviation = 0.100*volt
 wMax = 1.000*volt
 wMin = 0.000*volt
-synapses = genLayer.genSynapses(input, nbPixels*nbPixelsStates, output,
-    (nbPixels - 1) * 2, True, wAverage, wDeviation, wMin, wMax, 0.1*volt,
-    0.05*volt, 0*volt, 0*volt, args['tLTP'], args['tLeak'], args['tInhib'])
 
-inhibition = genLayer.genInhibition(output, args['tRefrac'])
+aPre = 0.1*volt
+aPost = 0.05*volt
+bPre = 0*volt
+bPost = 0*volt
+
+synapses = genLayer.genSynapses(input, nbPixels*nbPixelStates, output,
+    (nbPixels - 1) * 2, True, wAverage, wDeviation, wMin, wMax)
+
+inhibition = genLayer.genInhibition(output)
 
 # Monitors
 stateRecord = StateMonitor(output, 'v', record = True) # Record the state of each neurons of the output layer
@@ -32,7 +42,7 @@ stateRecord = StateMonitor(output, 'v', record = True) # Record the state of eac
 # recordInput = SpikeMonitor(input) # Record input layer spikes
 # synapsesRecord = StateMonitor(synapses, 'w', record = True)
 
-timeRun = times[len(times) - 1] + 10*ms
+timeRun = (nbPatterns * 10 + 10)*ms
 
 for i in range(40):
     # Run

@@ -1,8 +1,8 @@
 from brian2 import *
 from random import gauss
 
-# Create a new "Leaky integrate-and-ﬁre" NeuronGroup (with refraction and inhibition)
-def genNeurons(nbNeurons, threshold, reset, tRefrac):
+# Create a new "Leaky integrate-and-fire" NeuronGroup (with refraction and inhibition)
+def genNeurons(nbNeurons, tRefrac):
     eqs = '''dv/dt = -v/tLeak : volt (unless refractory)
              lastInhib : second'''
 
@@ -12,8 +12,7 @@ def genNeurons(nbNeurons, threshold, reset, tRefrac):
     return neurons
 
 # Create synapses between pre and post following connectionRule
-def genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, wMin, wMax,
-        aPre, aPost, bPre, bPost, tLTP, tLeak, tInhib):
+def genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, wMin, wMax):
     synapsesModel = '''w : volt
                    dwPre = aPre * exp(-bPre*(w-wMin/wMax-wMin)) : volt
                    dwPost = aPost * exp(-bPost*(wMax-w/wMax-wMin)) : volt
@@ -29,7 +28,7 @@ def genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, 
              w = clip(w - dwPost * (tPre == 0 * second or ltpCondition == 0), wMin, wMax)'''
 
     synapses = Synapses(pre, target=post, model=synapsesModel, pre=preEqs, post=postEqs)
-    synapses.connect(connectionRule) # Connecting every neurons of the first layer to every neurons of the second one
+    synapses.connect(connectionRule)
 
     for i in range(nbPre):
         for  j in range(nbPost):
@@ -41,7 +40,7 @@ def genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, 
     return synapses
 
 # Create inhibition on layer
-def genInhibition(layer, tRefrac):
+def genInhibition(layer):
     inhibition = Synapses(layer, target=layer, model='', pre='''
         lastInhib = (lastupdate + tRefrac) * (1 - int(not_refractory)) + t * int(not_refractory)''')
 
