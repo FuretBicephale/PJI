@@ -3,11 +3,37 @@ from random import randint, gauss, random
 
 from brian2 import *
 
-tInhib = 0 * ms
-tLeak = 0 * ms
-tRefrac = 0 * ms
-tLTP = 0 * ms
-threshold = 0 * volt
+def getScore(recordInput, recordOutput):
+    score = 0
+    tIn = recordInput.t[len(recordInput.t)-12:]
+    tOut = []
+    for i in range(len(recordOutput.t)):
+        if recordOutput.t[len(recordOutput.t) - (i + 1)] < tIn[0]:
+            break
+        else:
+            tOut.insert(0, recordOutput.t[len(recordOutput.t) - (i + 1)])
+    for i in range(len(tIn)):
+        nbAnswer = 0
+        for j in range(len(tOut)):
+            if i == len(tIn)-1:
+                if tOut[j] >= tIn[i]:
+                    nbAnswer += 1
+            else:
+                if tOut[j] >= tIn[i+1]:
+                    break
+                if tOut[j] >= tIn[i] and tOut[j] < tIn[i+1]:
+                    nbAnswer += 1
+        if nbAnswer == 0:
+            score -= 5
+        elif nbAnswer == 1:
+            score += 10
+    indicesOut = recordOutput.i[len(recordOutput.i) - len(tOut):]
+    for i in range(6):
+        if indicesOut.tolist().count(i) == 0:
+            score -= 5
+        elif indicesOut.tolist().count(i) == 1:
+            score += 10
+    return score
 
 ### Input neurons - 2 pixels with 2 states (ON/OFF).
 nbPixels = 4;
@@ -19,7 +45,7 @@ down = [1, 2] + [i + j for j in range(2, (nbPixels - 1) * 2, 2) for i in [1, 2]]
 time = [1, 1, 3, 3, 5, 5]
 
 # Learning
-nbMotifs = 75
+nbMotifs = 50
 indices = []
 times = time + [i + j for j in range(10, nbMotifs * 10, 10) for i in time]
 for i in range(nbMotifs):
@@ -70,38 +96,6 @@ postEqs = '''tPost = t
              w = clip(w + dwPre * (tPre != 0 * second and ltpCondition), wMin, wMax)
              w = clip(w - dwPost * (tPre == 0 * second or ltpCondition == 0), wMin, wMax)'''
 
-def getScore(recordInput, recordOutput):
-    score = 0
-    tIn = recordInput.t[len(recordInput.t)-12:]
-    tOut = []
-    for i in range(len(recordOutput.t)):
-        if recordOutput.t[len(recordOutput.t) - (i + 1)] < tIn[0]:
-            break
-        else:
-            tOut.insert(0, recordOutput.t[len(recordOutput.t) - (i + 1)])
-    for i in range(len(tIn)):
-        nbAnswer = 0
-        for j in range(len(tOut)):
-            if i == len(tIn)-1:
-                if tOut[j] >= tIn[i]:
-                    nbAnswer += 1
-            else:
-                if tOut[j] >= tIn[i+1]:
-                    break
-                if tOut[j] >= tIn[i] and tOut[j] < tIn[i+1]:
-                    nbAnswer += 1
-        if nbAnswer == 0:
-            score -= 5
-        elif nbAnswer == 1:
-            score += 10
-    indicesOut = recordOutput.i[len(recordOutput.i) - len(tOut):]
-    for i in range(6):
-        if indicesOut.tolist().count(i) == 0:
-            score -= 5
-        elif indicesOut.tolist().count(i) == 1:
-            score += 10
-    return score
-
 # Run
 nbIndividus = 5
 nbTests = 5
@@ -110,8 +104,6 @@ score = [0 for i in range(nbIndividus)]
 config = [0 for i in range(nbIndividus)]
 
 for i in range(nbIndividus):
-    score[i] = 0
-
     tInhib = random() * 5 * ms
     tLeak = random() * 5 * ms
     tRefrac = random() * 20 * ms
@@ -170,36 +162,34 @@ print config
 print score
 
 for m in range(5):
-    new_score = score
+    new_score = []
+    new_score.extend(score)
     new_score.sort(reverse=True)
+
     new_config = []
     new_config += [config[score.index(new_score[0])]]
-    score.remove(new_score[0])
     new_config += [config[score.index(new_score[1])]]
-    new_config += new_config
 
     croisement_index = randint(0, 5)
-    new_config[2][croisement_index] = new_config[1][croisement_index]
-    new_config[3][croisement_index] = new_config[0][croisement_index]
+    tmp = new_config[1][croisement_index]
+    new_config[1][croisement_index] = new_config[0][croisement_index]
+    new_config[0][croisement_index] = tmp
 
     config[0] = new_config[0]
     config[1] = new_config[1]
-    config[2] = new_config[2]
-    config[3] = new_config[3]
 
-    tInhib = random() * 10 * ms
-    tLeak = random() * 5 * ms
-    tRefrac = (random() * 10  + 10) * ms
-    tLTP = random() * 3 * ms
-    threshold = (random() + 1) * volt
+    for i in range(3, 5):
+        tInhib = random() * 10 * ms
+        tLeak = random() * 5 * ms
+        tRefrac = (random() * 10  + 10) * ms
+        tLTP = random() * 3 * ms
+        threshold = (random() + 1) * volt
 
-    config[4] = [tInhib, tLeak, tRefrac, tLTP, threshold]
+        config[i] = [tInhib, tLeak, tRefrac, tLTP, threshold]
 
     score = [0 for i in range(nbIndividus)]
 
     for i in range(nbIndividus):
-        score[i] = 0
-
         tInhib = config[i][0]
         tLeak = config[i][1]
         tRefrac = config[i][2]
@@ -254,37 +244,3 @@ for m in range(5):
     print "Generation {}".format(m + 2)
     print score
     print config
-
-# print ''
-# print 'First layer'
-# print 'count = ', record.count
-# print 'spikes = ', record.num_spikes
-# print record.it
-#
-# print ''
-# print 'Input'
-# print 'count = ', recordInput.count
-# print 'spikes = ', recordInput.num_spikes
-# print recordInput.it
-
-# Display simulation plot
-# figure(1)
-# for i in range(nbOutput) :
-#     subplot(2, 4, i+1)
-#     plot(stateRecord.t/ms, [threshold] * len(stateRecord.t), '--', label='threshold')
-#     plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
-#     legend()
-
-# figure(2)
-# plot(stateRecord.t/ms, [threshold for i in range(len(stateRecord.t))], '--', label='threshold')
-# for i in range(nbOutput) :
-#     plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
-# legend()
-
-# figure(3)
-# for j in range(nbOutput):
-#     subplot(2, 4, j+1)
-#     for i in range(nbPixels * nbPixelStates):
-#         plot(synapsesRecord.t/ms, synapsesRecord.w[i * nbOutput + j]/volt, label=i * nbOutput + j)
-#     legend()
-# show()

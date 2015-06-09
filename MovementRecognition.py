@@ -162,13 +162,6 @@ else:
 # Rerun until the learning is good
 while(not learned):
 
-    # Display simulation plot
-    # plot(stateRecord.t/ms, [output.thresh[0] for i in range(len(stateRecord.t))], '--', label='threshold')
-    # for i in range(nbOutput) :
-    #     plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
-    # legend()
-    # show()
-
     # Restore initial network
     restore()
     nbTry = nbTry + 1
@@ -183,12 +176,6 @@ while(not learned):
                     gauss(wInitAverage, wInitDeviation),
                     wMin,
                     wMax)
-
-    # if(supervised):
-    #     # output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
-    #     output.thresh = 600 * volt
-    # else:
-    #     output.thresh = 600 * volt
 
     # Rerun
     print ''
@@ -211,15 +198,6 @@ for i in range(nbOutput) :
     plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
 legend()
 show()
-
-# print synapses.w[0,0]
-# print synapses.w[0,1]
-# print synapses.w[1,0]
-# print synapses.w[1,1]
-# print synapses.w[2,0]
-# print synapses.w[2,1]
-# print synapses.w[3,0]
-# print synapses.w[3,1]
 
 # Second simulation
 nbPixels = 3

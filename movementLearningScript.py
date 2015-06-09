@@ -54,6 +54,7 @@ times += [i + j for j in range(90, 102, 2) for i in time]
 
 times *= ms
 input = SpikeGeneratorGroup(nbPixels * nbPixelStates, indices, times)
+
 ### Output neurons - We want to know if the movement is ascending or descending
 nbOutput = 2
 
@@ -164,37 +165,6 @@ for i in range(nIter):
         \r\n'''.format(i)
     run(timeRun, report='stdout')
 
-    # End
-    # print ''
-    # print 'First layer'
-    # print 'count = ', record.count
-    # print 'spikes = ', record.num_spikes
-    # print record.it
-    #
-    # print ''
-    # print 'Input'
-    # print 'count = ', recordInput.count
-    # print 'spikes = ', recordInput.num_spikes
-    # print recordInput.it
-    #
-    # print ''
-    # print 'First layer state'
-    # print 'v = ', stateRecord.v
-    # print 'r = ', stateRecord.refrac[0]
-    # print 'r = ', stateRecord.refrac[1]
-    # print 'i = ', stateRecord.lastInhib
-    #
-    # print ''
-    # print 'Synapses state'
-    # print 'w = ', synapsesRecord.w
-    #
-    # plot(stateRecord.t/ms, [output.thresh for i in range(len(stateRecord.t))], '--',
-    #     label='thresh')
-    # for i in range(nbOutput) :
-    #     plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
-    # legend()
-    # show()
-
     # Verify if the system has learned the pattern
     learned = True
     if(len(record.i) < 4):
@@ -221,12 +191,6 @@ for i in range(nIter):
                     gauss(wInitAverage, wInitDeviation),
                     wMin,
                     wMax)
-
-    # if(supervised):
-    #     # output.thresh = min(synapses.w[1, 0] + synapses.w[2, 0], synapses.w[1, 1] + synapses.w[2, 1])
-    #     output.thresh = 600 * volt
-    # else:
-    #     output.thresh = 600 * volt
 
 # Results
 print ''
