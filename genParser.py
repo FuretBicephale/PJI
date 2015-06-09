@@ -1,7 +1,7 @@
 from optparse import OptionParser
 
 # Create a generic parser for neural system simulation
-genParser():
+def genParser():
     parser = OptionParser()
 
     parser.add_option("-i", "--inhibition",
@@ -35,7 +35,7 @@ genParser():
     return parser
 
 # Return args from option parser
-getArgs(parser):
+def getArgs(parser):
     (options, args) = parser.parse_args()
 
     try :

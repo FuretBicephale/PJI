@@ -2,7 +2,7 @@ from brian2 import *
 from random import randint
 
 # Create indexes for vertical movements (0 is index for ON event from Pixel 1, 1 is index for OFF event from Pixel 1...)
-createPatterns(nbPixels):
+def createPatterns(nbPixels):
     # Up = ON from Pixel 1, OFF from Pixel 2
     up = [nbPixels*2 - 1, (nbPixels-2)*2] + [i - j for j in range(2, (nbPixels - 1) * 2, 2) for i in [nbPixels*2 - 1, (nbPixels-2)*2]]
 
@@ -12,7 +12,7 @@ createPatterns(nbPixels):
     return {'up':up, 'down':down}
 
 # Create an Input which introduce vertical movements in an alternate order (up, down, up, down...)
-genAlternateVerticalMovements(nbPixels, nbPixelStates, nbPatterns):
+def genAlternateVerticalMovements(nbPixels, nbPixelStates, nbPatterns):
     patterns = createPatterns(nbPixels)
 
     indexes = []
@@ -30,7 +30,7 @@ genAlternateVerticalMovements(nbPixels, nbPixelStates, nbPatterns):
     return input
 
 # Create an Input which introduce vertical movements in a random order (up as much as down)
-genRandomVerticalMovements(nbPixels, nbPixelStates, nbPatterns):
+def genRandomVerticalMovements(nbPixels, nbPixelStates, nbPatterns):
     patterns = createPatterns(nbPixels)
 
     indexes = []

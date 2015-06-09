@@ -2,7 +2,7 @@ from brian2 import *
 from random import gauss
 
 # Create a new "Leaky integrate-and-ﬁre" NeuronGroup (with refraction and inhibition)
-genNeurons(nbNeurons, threshold, reset, tRefrac):
+def genNeurons(nbNeurons, threshold, reset, tRefrac):
     eqs = '''dv/dt = -v/tLeak : volt (unless refractory)
              lastInhib : second'''
 
@@ -12,7 +12,7 @@ genNeurons(nbNeurons, threshold, reset, tRefrac):
     return neurons
 
 # Create synapses between pre and post following connectionRule
-genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, wMin, wMax,
+def genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, wMin, wMax,
         aPre, aPost, bPre, bPost, tLTP, tLeak, tInhib):
     synapsesModel = '''w : volt
                    dwPre = aPre * exp(-bPre*(w-wMin/wMax-wMin)) : volt
@@ -22,7 +22,7 @@ genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, wMin
                    ltpCondition = tPost > tPre and (tPost - tPre) <= tLTP : 1'''
 
     preEqs = '''tPre = t
-            v = v * (t - lastInhib < tInhib and lastInhib != 0 * ms) + (v * exp(-(t-lastupdate)/tLeak) + w) * (t - lastInhib >= tInhib or lastInhib == 0 * ms)'''
+            v = v * exp(-(t-lastupdate)/tLeak) + w'''
 
     postEqs = '''tPost = t
              w = clip(w + dwPre * (tPre != 0 * second and ltpCondition), wMin, wMax)
@@ -41,7 +41,7 @@ genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, wMin
     return synapses
 
 # Create inhibition on layer
-genInhibition(layer, tRefrac):
+def genInhibition(layer, tRefrac):
     inhibition = Synapses(layer, target=layer, model='', pre='''
         lastInhib = (lastupdate + tRefrac) * (1 - int(not_refractory)) + t * int(not_refractory)''')
 
