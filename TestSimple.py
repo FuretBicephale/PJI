@@ -16,7 +16,7 @@ tInhib = 1.5*ms # Minimum time before an inhibited spike can receive presynaptic
 
 eqs = '''dv/dt = -v/tLeak : volt (unless refractory)
          refrac : second
-         lastInhib : second''' # Neurons model
+         lastInhib : second ''' # Neurons model
 threshold = 800*volt # Neurons send a spike when this threshold is reached
 reset = 0*volt # Initial neurons value
 
@@ -41,9 +41,9 @@ synapsesModel = '''w : volt
                    dwPost = aPost * exp(-bPost*(wMax-w/wMax-wMin)) : volt
                    tPre : second
                    tPost : second
-                   ltpCondition = (tPost - tPre) >= (0 * second) and (tPost - tPre) <= tTLP : 1'''
+                   ltpCondition = (tPost - tPre) >= (0 * ms) and (tPost - tPre) <= tTLP : 1'''
 preEqs = '''tPre = t
-            v = v * (t - lastInhib < tInhib and lastInhib != 0 * ms) + (v * exp(-(t-lastupdate)/tLeak) + w) * (t - lastInhib >= tInhib or lastInhib == 0 * ms)
+            v = v * (int (t - lastInhib < tInhib and lastInhib != 0 * ms)) + (v * exp(-(t-lastupdate)/tLeak) + w * int((t - lastInhib >= tInhib) or (lastInhib == 0 * ms)) )
             refrac = tRefrac * int(not_refractory) + refrac * (1 - int(not_refractory))'''
 # If ltpCondition is False then it's equals to 0, 1 otherwise
 # So dwPre * (ltpCondition) = 0 if ltpCondition is false, dwPre otherwise
@@ -56,7 +56,7 @@ synapses.connect('j >= i * nbNeuronsPerPx and j < (i+1) * nbNeuronsPerPx') # Con
 synapses.w = wInit # Initialize synaptic weight
 
 # Inhibition
-inhibition = Synapses(firstLayer, pre='lastInhib = t * int(not_refractory)')
+inhibition = Synapses(firstLayer, model=synapsesModel, pre='lastInhib = t * int(not_refractory)')
 inhibition.connect("i != j") # Every neurons of the layer are connected to each other
 inhibition.w = wInit
 
