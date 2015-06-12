@@ -13,7 +13,7 @@ threshold = args['threshold']
 # Input
 nbPixels = 4
 nbPixelStates = 2
-nbPatterns = 500
+nbPatterns = 100
 if args['randomPattern']:
     input = genInput.genRandomVerticalMovements(nbPixels, nbPixelStates, nbPatterns)
 else:
@@ -24,7 +24,7 @@ output = genLayer.genNeurons((nbPixels - 1) * 2, tRefrac)
 wAverage = 0.700*volt
 wDeviation = 0.100*volt
 wMax = 1.000*volt
-wMin = 0.000*volt
+wMin = 0.001*volt
 
 aPre = 0.1*volt
 aPost = 0.05*volt
@@ -38,8 +38,8 @@ inhibition = genLayer.genInhibition(output)
 
 # Monitors
 stateRecord = StateMonitor(output, 'v', record = True) # Record the state of each neurons of the output layer
+recordInput = SpikeMonitor(input) # Record input layer spikes
 # record = SpikeMonitor(output) # Record output layer spikes
-# recordInput = SpikeMonitor(input) # Record input layer spikes
 # synapsesRecord = StateMonitor(synapses, 'w', record = True)
 
 timeRun = (nbPatterns * 10 + 10)*ms
@@ -47,6 +47,7 @@ timeRun = (nbPatterns * 10 + 10)*ms
 for i in range(40):
     # Run
     print ''
+    print 'Simulation {} - {}'.format(i+1, i * timeRun/40)
     run(timeRun/40, report='stdout')
 
     # Synapses weight save
@@ -71,24 +72,28 @@ for i in range(40):
 
 figure(1)
 plot(stateRecord.t/ms, [threshold for i in range(len(stateRecord.t))], '--', label='threshold')
-for i in range(nbOutput) :
+for i in range((nbPixels - 1) * 2) :
     plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
 legend()
 
-# figure(2)
+figure(2)
+plot(recordInput.t/ms, recordInput.i)
+legend()
+
+# figure(3)
 # for i in range(nbOutput) :
 #     subplot(2, 4, i+1)
 #     plot(stateRecord.t/ms, [threshold] * len(stateRecord.t), '--', label='threshold')
 #     plot(stateRecord.t/ms, stateRecord.v[i]/volt, label=i)
 #     legend()
 
-# figure(3)
+# figure(4)
 # plot(stateRecord_2.t/ms, [threshold for i in range(len(stateRecord_2.t))], '--', label='threshold')
 # for i in range(2) :
 #     plot(stateRecord_2.t/ms, stateRecord_2.v[i]/volt, label=i)
 # legend()
 
-# figure(4)
+# figure(5)
 # for j in range(nbOutput):
 #     subplot(2, 4, j+1)
 #     for i in range(nbPixels * nbPixelStates):
