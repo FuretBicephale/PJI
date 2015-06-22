@@ -2,12 +2,16 @@ from brian2 import *
 from random import gauss
 
 # Create a new "Leaky integrate-and-fire" NeuronGroup (with refraction and inhibition)
-def genNeurons(nbNeurons, tRefrac):
+def genNeurons(nbNeurons):
     eqs = '''dv/dt = -v/tLeak : volt (unless refractory)
              lastInhib : second
+             thresh : volt
+             tLeak : second
+             tRefrac : second
+             tInhib : second
              vMax = nanmax(v/volt) * volt: volt'''
 
-    neurons = NeuronGroup(nbNeurons, eqs, threshold='(v*tLeak/(tLeak-dt)) >= threshold and v == vMax', reset='v = 0*volt', refractory=tRefrac)
+    neurons = NeuronGroup(nbNeurons, eqs, threshold='(v*tLeak/(tLeak-dt)) >= thresh and v == vMax', reset='v = 0*volt', refractory='tRefrac')
 
     return neurons
 
@@ -18,6 +22,7 @@ def genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, 
                    dwPost = aPost * exp(-bPost*(wMax-w/wMax-wMin)) : volt
                    tPre : second
                    tPost : second
+                   tLTP : second
                    ltpCondition = tPost > tPre and (tPost - tPre) <= tLTP : 1'''
 
     preEqs = '''tPre = t
@@ -42,7 +47,9 @@ def genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, 
 
 # Create inhibition on layer
 def genInhibition(layer):
-    inhibition = Synapses(layer, target=layer, model='', pre='''lastInhib_post = t''')
+    inhibition = Synapses(layer, target=layer, model='', pre='''
+        lastInhib_post = t
+        v_post -= v_post''')
 
     inhibition.connect("i != j")
 

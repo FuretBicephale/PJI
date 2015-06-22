@@ -16,8 +16,9 @@ def genAlternateVerticalMovements(nbPixels, nbPixelStates, nbPatterns):
     patterns = createPatterns(nbPixels)
 
     indexes = []
-    time = [1, 1, 3, 3, 5, 5]
-    times = time + [i + j for j in range(10, nbPatterns * 10, 10) for i in time]
+    time = [i + j for j in range(0, nbPixels + 1, 2) for i in[1, 1]]
+    pattern_length = time[len(time) - 1] + 5
+    times = time + [i + j for j in range(pattern_length, nbPatterns * pattern_length * 2, pattern_length) for i in time]
     times *= ms
 
     for i in range(nbPatterns):
@@ -25,6 +26,13 @@ def genAlternateVerticalMovements(nbPixels, nbPixelStates, nbPatterns):
             indexes += patterns['up']
         else:
             indexes += patterns['down']
+
+    for i in range(nbPatterns):
+        if randint(0, 2) == 0:
+            indexes += patterns['up']
+        else:
+            indexes += patterns['down']
+
 
     input = SpikeGeneratorGroup(nbPixels * nbPixelStates, indexes, times)
 
