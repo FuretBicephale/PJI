@@ -9,14 +9,16 @@ def genNeurons(nbNeurons):
              tLeak : second
              tRefrac : second
              tInhib : second
-             vMax = nanmax(v/volt) * volt: volt'''
+             vMax = nanmax(v/volt) * volt: volt
+             activated : 1'''
 
     neurons = NeuronGroup(nbNeurons, eqs, threshold='(v*tLeak/(tLeak-dt)) >= thresh and v == vMax', reset='v = 0*volt', refractory='tRefrac')
+    neurons.activated = 1
 
     return neurons
 
 # Create synapses between pre and post following connectionRule
-def genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, wMin, wMax):
+def genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, wMin, wMax, needActivation = False):
     synapsesModel = '''w : volt
                    dwPre = aPre * exp(-bPre*(w-wMin/wMax-wMin)) : volt
                    dwPost = aPost * exp(-bPost*(wMax-w/wMax-wMin)) : volt
@@ -25,8 +27,14 @@ def genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, 
                    tLTP : second
                    ltpCondition = tPost > tPre and (tPost - tPre) <= tLTP : 1'''
 
-    preEqs = '''tPre = t
-            v_post += w * int((t - lastInhib_post >= tInhib or lastInhib_post == 0 * ms) and not_refractory)'''
+    if needActivation:
+        preEqs = '''tPre = t
+                v_post += (w * int((t - lastInhib_post >= tInhib or lastInhib_post == 0 * ms) and not_refractory)) * activated_post
+                activated_post = 0'''
+    else:
+        preEqs = '''tPre = t
+                v_post += w * int((t - lastInhib_post >= tInhib or lastInhib_post == 0 * ms) and not_refractory)
+                activated_post = 1'''
 
     postEqs = '''tPost = t
              w = clip(w + dwPre * int(tPre != 0 * second and ltpCondition), wMin, wMax)
