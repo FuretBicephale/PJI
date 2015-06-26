@@ -5,7 +5,7 @@ from random import randint
 def createPatterns(nbPixels):
     # Up = ON from Pixel 1, OFF from Pixel 2
     up = [nbPixels*2 - 1, (nbPixels-2)*2] + [i - j for j in range(2, (nbPixels - 1) * 2, 2) for i in [nbPixels*2 - 1, (nbPixels-2)*2]]
-    print up
+
     # Down = OFF from Pixel 1, ON from Pixel 2
     down = [1, 2] + [i + j for j in range(2, (nbPixels - 1) * 2, 2) for i in [1, 2]]
 
@@ -17,23 +17,24 @@ def genAlternateVerticalMovements(nbPixels, nbPixelStates, nbPatterns):
 
     indexes = []
     time = [i + j for j in range(0, (nbPixels - 1) * 2, 2) for i in[1, 1]]
-    print time
+
     pattern_length = time[len(time) - 1] + 5
-    times = time + [i + j for j in range(pattern_length, nbPatterns * pattern_length * 2, pattern_length) for i in time]
+    times = time + [i + j for j in range(pattern_length, nbPatterns * pattern_length, pattern_length) for i in time]
     times *= ms
+
+    print times
 
     for i in range(nbPatterns):
         if i % 2 == 0:
             indexes += patterns['up']
         else:
             indexes += patterns['down']
-
-    for i in range(nbPatterns):
-        if randint(0, 2) == 0:
-            indexes += patterns['up']
-        else:
-            indexes += patterns['down']
-
+    #
+    # for i in range(nbPatterns):
+    #     if randint(0, 2) == 0:
+    #         indexes += patterns['up']
+    #     else:
+    #         indexes += patterns['down']
 
     input = SpikeGeneratorGroup(nbPixels * nbPixelStates, indexes, times)
 

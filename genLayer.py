@@ -18,7 +18,7 @@ def genNeurons(nbNeurons):
     return neurons
 
 # Create synapses between pre and post following connectionRule
-def genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, wMin, wMax, needActivation = False):
+def genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, wMin, wMax, needActivation = False, begin = 0):
     synapsesModel = '''w : volt
                    dwPre = aPre * exp(-bPre*(w-wMin/wMax-wMin)) : volt
                    dwPost = aPost * exp(-bPost*(wMax-w/wMax-wMin)) : volt
