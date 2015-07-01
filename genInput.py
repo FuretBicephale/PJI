@@ -22,8 +22,6 @@ def genAlternateVerticalMovements(nbPixels, nbPixelStates, nbPatterns):
     times = time + [i + j for j in range(pattern_length, nbPatterns * pattern_length, pattern_length) for i in time]
     times *= ms
 
-    print times
-
     for i in range(nbPatterns):
         if i % 2 == 0:
             indexes += patterns['up']
