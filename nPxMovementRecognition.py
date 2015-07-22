@@ -1,6 +1,8 @@
 import os, pickle, genParser, genInput, genLayer, genGraph
 from brian2 import *
 
+prefs['codegen.target'] = 'numpy'
+
 # # Parser
 # parser = genParser.genParser()
 # args = genParser.getArgs(parser)
@@ -13,7 +15,7 @@ from brian2 import *
 # Input
 nbPixels = 7
 nbPixelStates = 2
-nbPatterns = 200
+nbPatterns = 4 * 100
 input = genInput.genAlternateVerticalMovements(nbPixels, nbPixelStates, nbPatterns)
 # if args['randomPattern']:
 #     input = genInput.genRandomVerticalMovements(nbPixels, nbPixelStates, nbPatterns)
@@ -21,7 +23,7 @@ input = genInput.genAlternateVerticalMovements(nbPixels, nbPixelStates, nbPatter
 #     input = genInput.genAlternateVerticalMovements(nbPixels, nbPixelStates, nbPatterns)
 
 layer = genLayer.genNeurons((nbPixels - 1) * 2)
-layer.thresh = 1.1*volt
+layer.thresh = 1*volt
 layer.tLeak = 0.5*ms
 layer.tRefrac = (2 * ((nbPixels-1) * 2 + 4) - 1) * ms
 layer.tInhib = 1*ms
@@ -43,7 +45,7 @@ synapses.tLTP = 1*ms
 inhibition = genLayer.genInhibition(layer)
 
 # Monitors
-stateRecord = StateMonitor(layer, ('v', 'thresh'), record = True) # Record the state of each neurons of the layer layer
+stateRecord = StateMonitor(layer, ('v', 'thresh', 'deltaThresh'), record = True) # Record the state of each neurons of the layer layer
 recordInput = SpikeMonitor(input) # Record input layer spikes
 # record = SpikeMonitor(layer) # Record layer layer spikes
 # synapsesRecord = StateMonitor(synapses, 'w', record = True)
@@ -56,7 +58,7 @@ net.add(inhibition)
 net.add(stateRecord)
 net.add(recordInput)
 
-timeRun = (nbPatterns * 10 + 10)/5 * ms
+timeRun = (nbPatterns/4 * (nbPixels-1) * 2 + 4) * ms
 
 # Run
 print ''
@@ -112,7 +114,7 @@ while(nbNeurons != 2 and nbNeurons != 4 and nbNeurons != 6):
         nbNeurons /= 2
 
         layerTab.append(genLayer.genNeurons(nbNeurons))
-        layerTab[i].thresh = 1.1*volt
+        layerTab[i].thresh = 1*volt
         layerTab[i].tLeak = layerTab[i-1].tLeak[0] + 2*ms
         layerTab[i].tRefrac = layerTab[i-1].tRefrac[0] - 2*ms
         layerTab[i].tInhib = 1*ms
@@ -125,7 +127,7 @@ while(nbNeurons != 2 and nbNeurons != 4 and nbNeurons != 6):
         nbNeurons = (nbNeurons-2) / 2
 
         layerTab.append(genLayer.genNeurons(nbNeurons))
-        layerTab[i].thresh = 1.65*volt
+        layerTab[i].thresh = 1.3*volt
         layerTab[i].tLeak = layerTab[i-1].tLeak[0] + 4*ms
         layerTab[i].tRefrac = layerTab[i-1].tRefrac[0] - 4*ms
         layerTab[i].tInhib = 1*ms
@@ -135,12 +137,14 @@ while(nbNeurons != 2 and nbNeurons != 4 and nbNeurons != 6):
         synapsesTab[i].tLTP = synapsesTab[i-1].tLTP[0] + 4*ms
 
     inhibitionTab.append(genLayer.genInhibition(layerTab[i]))
-    stateRecordTab.append(StateMonitor(layerTab[i], ('v', 'thresh'), record = True))
+    stateRecordTab.append(StateMonitor(layerTab[i], ('v', 'thresh', 'deltaThresh'), record = True))
 
     net.add(layerTab[i])
     net.add(synapsesTab[i])
     net.add(inhibitionTab[i])
     net.add(stateRecordTab[i])
+
+    input = genInput.genAlternateVerticalMovements(nbPixels, nbPixelStates, nbPatterns * (i+1))
 
     print ''
     print 'layer {} learning'.format(i+1)
@@ -151,7 +155,7 @@ while(nbNeurons != 2 and nbNeurons != 4 and nbNeurons != 6):
 if(nbNeurons != 2):
     if(nbNeurons % 4 == 0):
         output = genLayer.genNeurons(2)
-        output.thresh = 1.1*volt
+        output.thresh = 1*volt
         output.tLeak = layerTab[len(layerTab)-1].tLeak[0] + 2*ms
         output.tRefrac = layerTab[len(layerTab)-1].tRefrac[0] - 2*ms
         output.tInhib = 5*ms
@@ -162,18 +166,18 @@ if(nbNeurons != 2):
 
     else:
         output = genLayer.genNeurons(2)
-        output.thresh = 1.65*volt
+        output.thresh = 1.3*volt
         output.tLeak = layerTab[len(layerTab)-1].tLeak[0] + 4*ms
-        output.tRefrac = layerTab[len(layerTab)-1].tRefrac[0] - 4*ms
-        output.tInhib = 5*ms
+        output.tRefrac = layerTab[len(layerTab)-1].tRefrac[0] - 6*ms
+        output.tInhib = 4*ms
 
         synapses_output = genLayer.genSynapses(layerTab[len(layerTab)-1], nbNeurons, output,
             2, True, wAverage, wDeviation, wMin, wMax)
-        synapses_output.tLTP = synapsesTab[len(synapsesTab)-1].tLTP[0] + 4*ms
+        synapses_output.tLTP = synapsesTab[len(synapsesTab)-1].tLTP[0] + 6*ms
 
     inhibition_output = genLayer.genInhibition(output)
 
-    stateRecord_output = StateMonitor(output, ('v', 'thresh'), record = True)
+    stateRecord_output = StateMonitor(output, ('v', 'thresh', 'deltaThresh'), record = True)
     stateRecordTab.append(stateRecord_output)
 
     net.add(output)
@@ -181,9 +185,15 @@ if(nbNeurons != 2):
     net.add(inhibition_output)
     net.add(stateRecord_output)
 
+    input = genInput.genAlternateVerticalMovements(nbPixels, nbPixelStates, nbPatterns * (i+1))
+
+    print output.tRefrac
+
     print ''
     print 'Last layer learning'
     net.run(timeRun, report='stdout')
+
+    i += 1
 
     synapsesTab.append(synapses_output)
     inhibitionTab.append(inhibition_output)
@@ -208,22 +218,25 @@ genGraph.visualise_network([synapses] + synapsesTab)
 # inhibitions_2.connect(False)
 
 for i in range(len(layerTab)):
-    layerTab[i].tRefrac = 0*ms
-    layerTab[i].tInhib = 0*ms
-    inhibitionTab[i].connect(False)
+    layerTab[i].apprentissage = 0
+    layerTab[i].tRefrac /= 2
 
 # output.tRefrac = 0*ms
 # output.tInhib = 0*ms
 # inhibition_output.connect(False)
 
+input = genInput.genAlternateVerticalMovements(nbPixels, nbPixelStates, nbPatterns * (i+1))
+
 print ''
 print 'Without learning'
-net.run(timeRun * 4, report='stdout')
+net.run(timeRun, report='stdout')
+
+genGraph.visualise_network([synapses] + synapsesTab)
 
 for i in range(len(layerTab)):
     figure(i)
-    plot(stateRecordTab[i].t/ms, stateRecordTab[i].thresh[0]/volt, '--', label='threshold')
     for j in range(len(stateRecordTab[i].v)) :
+        plot(stateRecordTab[i].t/ms, (stateRecordTab[i].thresh[j] + stateRecordTab[i].deltaThresh[j])/volt, '--', label='threshold')
         plot(stateRecordTab[i].t/ms, stateRecordTab[i].v[j]/volt, label=j)
     legend()
 

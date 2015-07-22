@@ -4,14 +4,25 @@ from random import gauss
 # Create a new "Leaky integrate-and-fire" NeuronGroup (with refraction and inhibition)
 def genNeurons(nbNeurons):
     eqs = '''dv/dt = -v/tLeak : volt (unless refractory)
+             ddeltaThresh/dt = -deltaThresh/threshLeak : volt
              lastInhib : second
              thresh : volt
              tLeak : second
+             threshLeak = 2*tRefrac: second
              tRefrac : second
              tInhib : second
-             vMax = nanmax(v/volt) * volt: volt'''
+             vMax = nanmax(v/volt) * volt: volt
+             apprentissage : 1
+             lastSuccessfulThresh : volt'''
 
-    neurons = NeuronGroup(nbNeurons, eqs, threshold='(v*tLeak/(tLeak-dt)) >= thresh and v == vMax', reset='v = 0*volt', refractory='tRefrac')
+    rst = '''v = 0*volt
+             lastSuccessfulThresh = thresh + deltaThresh
+             deltaThresh += 1*apprentissage*volt'''
+
+    neurons = NeuronGroup(nbNeurons, eqs, threshold='(v*tLeak/(tLeak-dt)) >= thresh + deltaThresh and v == vMax', reset=rst, refractory='tRefrac')
+
+    neurons.deltaThresh = 0*volt
+    neurons.apprentissage = 1
 
     return neurons
 
@@ -26,11 +37,12 @@ def genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, 
                    ltpCondition = tPost > tPre and (tPost - tPre) <= tLTP : 1'''
 
     preEqs = '''tPre = t
-            v_post += w * int((t - lastInhib_post >= tInhib or lastInhib_post == 0 * ms) and not_refractory)'''
+            v_post += w * int((t - lastInhib_post >= tInhib or lastInhib_post == 0 * ms) and not_refractory)
+            '''
 
     postEqs = '''tPost = t
-             w = clip(w + dwPre * int(tPre != 0 * second and ltpCondition), wMin, wMax)
-             w = clip(w - dwPost * int(tPre == 0 * second or ltpCondition == 0), wMin, wMax)'''
+             w = w * (1 - apprentissage_post) + (clip(w + dwPre * int(tPre != 0 * second and ltpCondition), wMin, wMax) * apprentissage)
+             w = w * (1 - apprentissage_post) + (clip(w - dwPost * int(tPre == 0 * second or ltpCondition == 0), wMin, wMax) * apprentissage)'''
 
     synapses = Synapses(pre, target=post, model=synapsesModel,
         pre=preEqs, post=postEqs)
@@ -49,7 +61,7 @@ def genSynapses(pre, nbPre, post, nbPost, connectionRule, wAverage, wDeviation, 
 def genInhibition(layer):
     inhibition = Synapses(layer, target=layer, model='', pre='''
         lastInhib_post = t
-        v_post -= v_post''')
+        v_post = 0*volt''')
 
     inhibition.connect("i != j")
 
