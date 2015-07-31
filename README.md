@@ -4,6 +4,30 @@
 * Python 2.7
 * Brian2 Simulator
 
+### Brian modification
+
+codegen/generators/numpy_generator.py line 275 :
+```
+for func_name, func in [('sin', np.sin), ('cos', np.cos), ('tan', np.tan),
+                        ('sinh', np.sinh), ('cosh', np.cosh), ('tanh', np.tanh),
+                        ('exp', np.exp), ('log', np.log), ('log10', np.log10),
+                        ('sqrt', np.sqrt), ('arcsin', np.arcsin),
+                        ('arccos', np.arccos), ('arctan', np.arctan),
+                        ('abs', np.abs), ('mod', np.fmod),
+                        ('sign', np.sign), ('nanmax', np.nanmax)]:
+    DEFAULT_FUNCTIONS[func_name].implementations.add_implementation(NumpyCodeGenerator,
+                                                                    code=func)
+```
+
+core/functions.py line 456 :
+```
+	'sign': Function(pyfunc=np.sign, sympy_func=sympy.sign,
+                     arg_units=[None], return_unit=1),
+    'nanmax': Function(pyfunc=np.nanmax, arg_units=[None], return_unit=1),
+    # functions that need special treatment
+    'rand': Function(pyfunc=rand, arg_units=[], return_unit=1, stateless=False),
+```
+
 ### MovementLearningScript
 This script creates neural networks which goal is to be able to recognize a vertical movement between 2 pixels. These networks, based on parameters given as arguments, will learn to detect these movements with supervised or unsupervised learning. At the end, the script counts the number of successful learning and print it to the user.
 
@@ -28,6 +52,12 @@ This script creates a neural network which goal is to be able to recognize a ver
 
 This script uses the files genXXX.py. These files are used to simplify the main code and the creation of inputs, neurons and synapses.
 
+### differentSpeedMovementRecognition
+This script creates a neural network which goal is to be able to recognize a vertical movement between n pixels in 2 different speed with unsupervised learning.
+
+### twoColumnsMovementRecognition
+This script creates a neural network which goal is to be able to recognize a vertical movement between n pixels on 2 columns with unsupervised learning.
+
 ##### genInput
 This file helps the creation of input :
 * createPatterns : Creates an up or down movement depending of the number of pixels
@@ -39,3 +69,8 @@ This file helps the creation of neurons and layer :
 * genNeurons : Creates a new "Leaky integrate-and-fire" NeuronGroup (with refraction and inhibition)
 * genSynapses : Creates synaptic connection between pre and post following connectionRule
 * genInhibition : Creates inhibited synaptic connection between every neuron of layer.
+
+##### genGraph
+This file helps the creation of graph :
+* visualise_network : Creates a graph to show feed-forward neural network. The synapses must be ordered (input to output).
+* visualise_spike : Creates a graph to show neurons spikes 

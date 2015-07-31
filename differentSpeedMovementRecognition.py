@@ -6,12 +6,12 @@ prefs['codegen.target'] = 'numpy'
 # Input
 nbPixels = 7
 nbPixelStates = 2
-nbPatterns = 2 * 300
+nbPatterns = 2 * 600
 input = genInput.genAlternateVerticalMovementsAlternateSpeed(nbPixels, nbPixelStates, nbPatterns, 0)
 
 layer = genLayer.genNeurons((nbPixels - 1) * 3)
 layer.thresh = 1*volt
-layer.tLeak = 0.5*ms
+layer.tLeak = 1*ms
 layer.tRefrac = (2 * (2 * (nbPixels-2) + max(0, ((nbPixels-3)/2)*2)) + 30) * ms
 layer.tInhib = 1*ms
 
@@ -22,8 +22,8 @@ wDeviation = 0.150*volt
 wMax = 1.000*volt
 wMin = 0.001*volt
 
-aPre = 0.1*volt
-aPost = 0.05*volt
+aPre = 0.05*volt
+aPost = 0.025*volt
 bPre = 0*volt
 bPost = 0*volt
 
@@ -61,6 +61,7 @@ show()
 genGraph.visualise_spike(spikeLayer)
 
 layer.apprentissage = 0
+layer.thresh -= 0.1*volt
 # layer.tRefrac = 0 * ms
 
 output = genLayer.genNeurons(4)
@@ -95,7 +96,7 @@ genGraph.visualise_network([synapses, synapsesOutput])
 genGraph.visualise_spike(spikeLayerOutput)
 
 output.apprentissage = 0
-output.thresh = output.lastSuccessfulThresh
+output.thresh = output.lastSuccessfulThresh - 0.4*volt
 output.deltaThresh = 0*volt
 # output.tRefrac = 0 * ms
 
@@ -106,29 +107,66 @@ time = [i + j for j in range(0, (nbPixels - 1) * 2, 2) for i in[1, 1]]
 time += [i + j for j in range((nbPixels - 1) * 2 + 8, (nbPixels - 1) * 3 + 8, 2) for i in[1, 1]]
 
 pattern_length = time[len(time) - 1] + 9
-times = time + [i + j for j in range(pattern_length, nbPatterns/2 * pattern_length, pattern_length) for i in time]
+times = time + [i + j for j in range(pattern_length, 6 * pattern_length, pattern_length) for i in time]
 
-for i in range(nbPatterns/2):
-    if i % 2 == 0:
-        indexes += patterns['up']
-        indexes += patterns2['up']
-    else:
-        indexes += patterns['down']
-        indexes += patterns2['down']
+indexes += patterns['up']
+indexes += patterns2['up']
+indexes += patterns['down']
+indexes += patterns2['down']
 
-nbLoop = (20 * len(indexes))/100
-for i in range(0, nbLoop):
-    ind = randint(0, len(indexes))
-    del indexes[ind]
-    del times[ind]
+i = len(indexes)
+indexes += patterns['up']
+del indexes[i]
+del times[i]
 
-times *= ms
+i = len(indexes)
+indexes += patterns2['up']
+del indexes[i]
+del times[i]
 
-input.set_spikes(indexes, times + timeRun)
+i = len(indexes)
+indexes += patterns['down']
+del indexes[i]
+del times[i]
+
+i = len(indexes)
+indexes += patterns2['down']
+del indexes[i]
+del times[i]
+
+i = len(indexes)
+indexes += patterns['up']
+del indexes[i]
+del indexes[i]
+del times[i]
+del times[i]
+
+i = len(indexes)
+indexes += patterns2['up']
+del indexes[i]
+del indexes[i]
+del times[i]
+del times[i]
+
+i = len(indexes)
+indexes += patterns['down']
+del indexes[i]
+del indexes[i]
+del times[i]
+del times[i]
+
+i = len(indexes)
+indexes += patterns2['down']
+del indexes[i]
+del indexes[i]
+del times[i]
+del times[i]
+
+input.set_spikes(indexes, times * ms + timeRun)
 
 print ''
 print 'Without learning'
-net.run(timeRun, report='stdout')
+net.run(6 * pattern_length * ms, report='stdout')
 
 figure(1)
 for j in range(len(stateRecord.v)) :

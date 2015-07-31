@@ -85,7 +85,7 @@ net.add(inhibitionOutput)
 net.add(stateRecordOutput)
 net.add(spikeLayerOutput)
 
-input = genInput.genAlternateVerticalMovementsAlternateSpeed(nbPixels, nbPixelStates, nbPatterns * 2)
+input = genInput.genAlternateVerticalMovementsAlternateSpeed(nbPixels, nbPixelStates, nbPatterns * 2, 0)
 
 # Run
 print ''
@@ -95,11 +95,11 @@ genGraph.visualise_network([synapses, synapsesOutput])
 genGraph.visualise_spike(spikeLayerOutput)
 
 output.apprentissage = 0
-output.thresh = output.lastSuccessfulThresh
+output.thresh = output.lastSuccessfulThresh - 0.1 * volt
 output.deltaThresh = 0*volt
 # output.tRefrac = 0 * ms
 
-input = genInput.genAlternateVerticalMovementsAlternateSpeed(nbPixels, nbPixelStates, nbPatterns * 3)
+input = genInput.genAlternateVerticalMovementsAlternateSpeed(nbPixels, nbPixelStates, nbPatterns * 3, 0)
 
 print ''
 print 'Without learning'

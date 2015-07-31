@@ -127,7 +127,7 @@ while(nbNeurons != 2 and nbNeurons != 4 and nbNeurons != 6):
         nbNeurons = (nbNeurons-2) / 2
 
         layerTab.append(genLayer.genNeurons(nbNeurons))
-        layerTab[i].thresh = 1.3*volt
+        layerTab[i].thresh = 1*volt
         layerTab[i].tLeak = layerTab[i-1].tLeak[0] + 4*ms
         layerTab[i].tRefrac = layerTab[i-1].tRefrac[0] - 4*ms
         layerTab[i].tInhib = 1*ms
@@ -166,7 +166,7 @@ if(nbNeurons != 2):
 
     else:
         output = genLayer.genNeurons(2)
-        output.thresh = 1.3*volt
+        output.thresh = 1*volt
         output.tLeak = layerTab[len(layerTab)-1].tLeak[0] + 4*ms
         output.tRefrac = layerTab[len(layerTab)-1].tRefrac[0] - 6*ms
         output.tInhib = 4*ms
@@ -199,7 +199,7 @@ if(nbNeurons != 2):
     inhibitionTab.append(inhibition_output)
     layerTab.append(output)
 
-genGraph.visualise_network([synapses] + synapsesTab)
+genGraph.visualise_network(synapsesTab)
 
 # figure(2)
 # for i in range(2) :
@@ -231,7 +231,7 @@ print ''
 print 'Without learning'
 net.run(timeRun, report='stdout')
 
-genGraph.visualise_network([synapses] + synapsesTab)
+genGraph.visualise_network(synapsesTab)
 
 for i in range(len(layerTab)):
     figure(i)

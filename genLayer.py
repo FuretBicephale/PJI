@@ -8,7 +8,7 @@ def genNeurons(nbNeurons):
              lastInhib : second
              thresh : volt
              tLeak : second
-             threshLeak = 2*tRefrac: second
+             threshLeak = 4*tRefrac: second
              tRefrac : second
              tInhib : second
              vMax = nanmax(v/volt) * volt: volt
@@ -17,7 +17,7 @@ def genNeurons(nbNeurons):
 
     rst = '''v = 0*volt
              lastSuccessfulThresh = thresh + deltaThresh
-             deltaThresh += 1*apprentissage*volt'''
+             deltaThresh += thresh*apprentissage'''
 
     neurons = NeuronGroup(nbNeurons, eqs, threshold='(v*tLeak/(tLeak-dt)) >= thresh + deltaThresh and v == vMax', reset=rst, refractory='tRefrac')
 
