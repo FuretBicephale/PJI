@@ -28,6 +28,10 @@ core/functions.py line 456 :
     'rand': Function(pyfunc=rand, arg_units=[], return_unit=1, stateless=False),
 ```
 
+Add the following line in your own scripts, in order to be able to use nanmax :
+```
+    prefs['codegen.target'] = 'numpy'
+```
 ### MovementLearningScript
 This script creates neural networks which goal is to be able to recognize a vertical movement between 2 pixels. These networks, based on parameters given as arguments, will learn to detect these movements with supervised or unsupervised learning. At the end, the script counts the number of successful learning and print it to the user.
 
